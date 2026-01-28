@@ -1,0 +1,245 @@
+/**
+ * 家的时光 - 全局样式变量与混入
+ * 温柔到底的视觉规范
+ */
+
+// ==================== 色彩系统 ====================
+// 主色调
+$color-primary: #FAF7F2;       // 米白主背景
+$color-card-bg: #FFFCF8;       // 暖白卡片底色
+$color-milk-coffee: #C4B8A8;   // 奶咖色
+$color-warm-gray: #9E8F7D;     // 暖灰
+$color-sunset-orange: #E07A5F; // 落日橙
+$color-deep-orange: #D4654A;   // 深橙
+$color-moss-green: #8A9A5B;    // 苔藓绿
+$color-dark-brown: #5C4F42;    // 深褐
+$color-warm-white: #F5F1ED;    // 暖灰背景(Tab栏)
+$color-line: #E8E4DF;          // 边框色
+$color-paper-bg: #FAF7F2;      // 信纸背景
+$color-envelope: #E8DCC4;      // 信封米黄
+$color-paper-line: #F0EBE5;    // 信纸横线
+
+// 遮罩颜色
+$color-overlay: rgba(230, 222, 212, 0.6); // 奶咖色半透明遮罩
+
+// 阴影颜色
+$shadow-warm: rgba(196, 184, 168, 0.15);
+$shadow-orange: rgba(224, 122, 95, 0.3);
+$shadow-glow: rgba(224, 122, 95, 0.4);
+
+// ==================== 字体规范 ====================
+$font-family-base: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+$font-family-handwrite: 'LXGW WenKai', 'STKaiti', 'KaiTi', serif;
+
+// 字号
+$font-size-title: 44rpx;       // 大标题 22px
+$font-size-body: 32rpx;        // 正文 16px
+$font-size-quote: 28rpx;       // 引用 14px
+$font-size-timestamp: 24rpx;   // 时间戳 12px
+$font-size-tab: 20rpx;         // Tab文字 10px
+$font-size-small: 22rpx;       // 小字 11px
+
+// ==================== 间距规范 ====================
+$spacing-xs: 8rpx;
+$spacing-sm: 16rpx;
+$spacing-md: 24rpx;
+$spacing-lg: 32rpx;
+$spacing-xl: 48rpx;
+
+// ==================== 圆角规范 ====================
+$radius-sm: 8rpx;
+$radius-md: 16rpx;
+$radius-lg: 32rpx;
+$radius-full: 50%;
+
+// ==================== 动效规范 ====================
+$transition-ease: cubic-bezier(0.25, 0.1, 0.25, 1.0);
+$transition-duration: 0.3s;
+$transition-slow: 0.5s;
+
+// ==================== 混入 ====================
+
+// 毛玻璃效果
+@mixin glass-effect {
+  background: rgba(245, 241, 237, 0.9);
+  backdrop-filter: blur(20rpx);
+  -webkit-backdrop-filter: blur(20rpx);
+}
+
+// 卡片阴影
+@mixin card-shadow {
+  box-shadow: 0 8rpx 24rpx $shadow-warm;
+}
+
+// 弥散阴影
+@mixin diffuse-shadow {
+  box-shadow: 0 8rpx 24rpx rgba(196, 184, 168, 0.15);
+}
+
+// 橙色发光阴影
+@mixin orange-glow {
+  box-shadow: 0 0 40rpx $shadow-glow;
+}
+
+// 按钮按下效果
+@mixin button-press {
+  transform: scale(0.98);
+  box-shadow: 0 4rpx 12rpx rgba(196, 184, 168, 0.1);
+}
+
+// 呼吸灯动效
+@mixin breathing-animation($name, $duration: 2s) {
+  animation: #{$name} $duration ease-in-out infinite;
+}
+
+// 墨水晕染效果
+@mixin ink-spread {
+  transition: all 0.3s $transition-ease;
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle, $color-sunset-orange 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s $transition-ease, height 0.3s $transition-ease, opacity 0.3s $transition-ease;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &.active::after {
+    width: 200%;
+    height: 200%;
+    opacity: 0.2;
+  }
+}
+
+// 安全区域
+@mixin safe-area-bottom {
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@mixin safe-area-top {
+  padding-top: constant(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top);
+}
+
+// ==================== 关键帧动画 ====================
+
+// 呼吸灯 - 记录按钮
+@keyframes breathing {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(0.98);
+  }
+}
+
+// 烛光闪烁
+@keyframes candleFlicker {
+  0%, 100% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 0.97;
+  }
+  50% {
+    opacity: 0.95;
+  }
+  75% {
+    opacity: 0.98;
+  }
+}
+
+// 纸张飘入
+@keyframes paperFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(40rpx) rotate(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+// 光晕扩散 - 心跳
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(138, 154, 91, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20rpx 10rpx rgba(138, 154, 91, 0.2);
+  }
+}
+
+// 信封飞走
+@keyframes flyAway {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-200rpx) rotate(-5deg) scale(0.8);
+  }
+}
+
+// 水波纹扩散
+@keyframes ripple {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+// 火焰粒子
+@keyframes flame {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-4rpx) scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+// 滑入动画
+@keyframes slideIn {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+// 共鸣金光
+@keyframes resonanceGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(224, 122, 95, 0);
+  }
+  30% {
+    box-shadow: 0 0 40rpx rgba(224, 122, 95, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(224, 122, 95, 0);
+  }
+}

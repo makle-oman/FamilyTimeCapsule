@@ -1,0 +1,50 @@
+/**
+ * uni.scss - UniApp 全局样式
+ * 这里的变量会被自动引入到每个组件中
+ */
+
+/* 主题色 */
+$uni-primary: #E07A5F;
+$uni-success: #8A9A5B;
+$uni-warning: #C4B8A8;
+$uni-error: #D4654A;
+$uni-info: #9E8F7D;
+
+/* 文字颜色 */
+$uni-text-color: #5C4F42;
+$uni-text-color-inverse: #FFFCF8;
+$uni-text-color-grey: #9E8F7D;
+$uni-text-color-placeholder: #C4B8A8;
+
+/* 背景颜色 */
+$uni-bg-color: #FAF7F2;
+$uni-bg-color-grey: #F5F1ED;
+$uni-bg-color-hover: #E8E4DF;
+$uni-bg-color-mask: rgba(230, 222, 212, 0.6);
+
+/* 边框颜色 */
+$uni-border-color: #E8E4DF;
+
+/* 字体大小 */
+$uni-font-size-sm: 24rpx;
+$uni-font-size-base: 28rpx;
+$uni-font-size-lg: 32rpx;
+
+/* 图片加载中背景色 */
+$uni-color-loading: #E8E4DF;
+
+/* 间距 */
+$uni-spacing-sm: 16rpx;
+$uni-spacing-base: 24rpx;
+$uni-spacing-lg: 32rpx;
+
+/* 圆角 */
+$uni-border-radius-sm: 8rpx;
+$uni-border-radius-base: 16rpx;
+$uni-border-radius-lg: 32rpx;
+$uni-border-radius-circle: 50%;
+
+/* 阴影 */
+$uni-shadow-sm: 0 4rpx 12rpx rgba(196, 184, 168, 0.1);
+$uni-shadow-base: 0 8rpx 24rpx rgba(196, 184, 168, 0.15);
+$uni-shadow-lg: 0 12rpx 32rpx rgba(196, 184, 168, 0.2);

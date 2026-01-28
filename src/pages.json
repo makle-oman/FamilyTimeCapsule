@@ -1,0 +1,54 @@
+{
+  "pages": [
+    {
+      "path": "pages/timeline/timeline",
+      "style": {
+        "navigationBarTitleText": "",
+        "navigationStyle": "custom",
+        "backgroundColor": "#FAF7F2",
+        "backgroundColorTop": "#FAF7F2",
+        "backgroundColorBottom": "#FAF7F2"
+      }
+    },
+    {
+      "path": "pages/gallery/gallery",
+      "style": {
+        "navigationBarTitleText": "",
+        "navigationStyle": "custom",
+        "backgroundColor": "#FAF7F2"
+      }
+    },
+    {
+      "path": "pages/mailbox/mailbox",
+      "style": {
+        "navigationBarTitleText": "",
+        "navigationStyle": "custom",
+        "backgroundColor": "#FAF7F2"
+      }
+    },
+    {
+      "path": "pages/profile/profile",
+      "style": {
+        "navigationBarTitleText": "",
+        "navigationStyle": "custom",
+        "backgroundColor": "#FAF7F2"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "",
+    "navigationBarBackgroundColor": "#FAF7F2",
+    "backgroundColor": "#FAF7F2",
+    "backgroundTextStyle": "dark",
+    "app-plus": {
+      "background": "#FAF7F2"
+    }
+  },
+  "easycom": {
+    "autoscan": true,
+    "custom": {
+      "^custom-(.*)": "@/components/$1/$1.vue"
+    }
+  }
+}
