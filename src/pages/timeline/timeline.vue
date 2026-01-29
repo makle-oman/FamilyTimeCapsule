@@ -1,7 +1,18 @@
 <template>
-  <view class="page-wrapper">
+  <view class="page-wrapper" :class="fontClass">
     <!-- 状态栏占位 -->
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
+
+    <!-- 家庭名称头部 -->
+    <view class="family-header">
+      <view class="family-info">
+        <text class="family-name">{{ familyName }}</text>
+        <text class="family-year">Established {{ establishedYear }}</text>
+      </view>
+      <view class="edit-name-btn" @tap="openEditName">
+        <text class="edit-icon">✎</text>
+      </view>
+    </view>
 
     <!-- 记忆唤醒条 -->
     <view
@@ -105,25 +116,39 @@
       @submit="submitRecord"
     />
 
+    <!-- 家庭名称弹窗 -->
+    <family-name-modal
+      :visible="showFamilyNameModal"
+      :mode="familyNameModalMode"
+      :initial-name="familyName"
+      @close="closeFamilyNameModal"
+      @submit="saveFamilyName"
+    />
+
     <!-- 记忆详情弹窗 -->
     <view v-if="showMemoryPopup" class="memory-popup" @tap.self="closeMemoryPopup">
-      <view class="popup-content">
+      <view class="popup-card">
+        <!-- 头部：日期 + 关闭按钮 -->
         <view class="popup-header">
-          <text class="popup-title">当日回忆</text>
-          <view class="popup-close" @tap="closeMemoryPopup">×</view>
-        </view>
-        <view class="popup-body">
           <text class="popup-date">{{ todayMemory?.date }}</text>
-          <text class="popup-text">{{ todayMemory?.content }}</text>
-          <view v-if="todayMemory?.images?.length" class="popup-images">
-            <image
-              v-for="(img, index) in todayMemory.images"
-              :key="index"
-              :src="img"
-              mode="aspectFill"
-              class="popup-image"
-            />
-          </view>
+          <text class="popup-close" @tap="closeMemoryPopup">Close</text>
+        </view>
+
+        <!-- 图片区域 -->
+        <view class="popup-image-wrapper">
+          <image
+            v-if="todayMemory?.images?.length"
+            :src="todayMemory.images[0]"
+            mode="aspectFill"
+            class="popup-image"
+          />
+          <view v-else class="popup-image-placeholder"></view>
+          <text class="popup-image-hint">Do you remember this?</text>
+        </view>
+
+        <!-- 引用文字 -->
+        <view class="popup-quote">
+          <text class="popup-text">"{{ todayMemory?.content }}"</text>
         </view>
       </view>
     </view>
@@ -135,12 +160,14 @@ import { formatDate, generateId, getWarmMessage } from '@/utils/index.js'
 import TabBar from '@/components/tab-bar/tab-bar.vue'
 import MemoryCard from '@/components/memory-card/memory-card.vue'
 import RecordModal from '@/components/record-modal/record-modal.vue'
+import FamilyNameModal from '@/components/family-name-modal/family-name-modal.vue'
 
 export default {
   components: {
     TabBar,
     MemoryCard,
-    RecordModal
+    RecordModal,
+    FamilyNameModal
   },
   data() {
     return {
@@ -149,7 +176,12 @@ export default {
       showReminder: false,
       showRecordModal: false,
       showMemoryPopup: false,
+      showFamilyNameModal: false,
+      familyNameModalMode: 'welcome',
       loading: false,
+      fontClass: 'font-system',
+      familyName: '',
+      establishedYear: new Date().getFullYear(),
       familyMembers: [
         { id: '1', name: '爸爸', avatar: '', online: true },
         { id: '2', name: '妈妈', avatar: '', online: true },
@@ -180,6 +212,12 @@ export default {
     const systemInfo = uni.getSystemInfoSync()
     this.statusBarHeight = systemInfo.statusBarHeight || 20
 
+    // 加载字体设置
+    this.fontClass = uni.getStorageSync('fontClass') || 'font-system'
+
+    // 加载家庭信息
+    this.loadFamilyInfo()
+
     // 加载数据
     this.loadMemories()
     this.checkTodayMemory()
@@ -189,7 +227,53 @@ export default {
       this.showReminder = true
     }, 500)
   },
+  onShow() {
+    // 每次显示页面时刷新字体设置
+    this.fontClass = uni.getStorageSync('fontClass') || 'font-system'
+    // 刷新家庭信息
+    this.loadFamilyInfo()
+  },
   methods: {
+    loadFamilyInfo() {
+      const familyData = uni.getStorageSync('familyData')
+      if (familyData && familyData.familyName) {
+        this.familyName = familyData.familyName
+        this.establishedYear = familyData.establishedYear || new Date().getFullYear()
+      } else {
+        // 首次登录，显示设置家庭名称弹窗
+        this.familyNameModalMode = 'welcome'
+        this.showFamilyNameModal = true
+      }
+    },
+    openEditName() {
+      this.familyNameModalMode = 'edit'
+      this.showFamilyNameModal = true
+    },
+    closeFamilyNameModal() {
+      this.showFamilyNameModal = false
+    },
+    saveFamilyName(name) {
+      this.familyName = name
+      const familyData = uni.getStorageSync('familyData') || {}
+      familyData.familyName = name
+      familyData.establishedYear = familyData.establishedYear || new Date().getFullYear()
+      this.establishedYear = familyData.establishedYear
+      uni.setStorageSync('familyData', familyData)
+
+      this.showFamilyNameModal = false
+
+      if (this.familyNameModalMode === 'welcome') {
+        uni.showToast({
+          title: '欢迎回家',
+          icon: 'success'
+        })
+      } else {
+        uni.showToast({
+          title: '已保存',
+          icon: 'success'
+        })
+      }
+    },
     loadMemories() {
       this.loading = true
 
@@ -220,8 +304,26 @@ export default {
             createTime: Date.now() - 1000 * 60 * 60 * 2,
             resonanceCount: 3,
             parallelViews: [
-              { authorId: '1', authorName: '爸爸' },
-              { authorId: '2', authorName: '妈妈' }
+              {
+                authorId: '1',
+                authorName: '爸爸',
+                avatar: '',
+                online: true,
+                content: '今天妈妈做的菜真的很好吃，虽然看起来有点奇怪，但味道棒极了！孩子也吃得特别香。',
+                images: [],
+                tags: ['美食', '家庭'],
+                resonanceCount: 2
+              },
+              {
+                authorId: '3',
+                authorName: '我',
+                avatar: '',
+                online: true,
+                content: '妈妈今天做的菜超级好吃！我吃了两碗饭，爸爸也夸妈妈的厨艺越来越好了。',
+                images: [],
+                tags: ['美食'],
+                resonanceCount: 1
+              }
             ]
           },
           {
@@ -250,9 +352,9 @@ export default {
       this.todayMemory = {
         title: '365天前的今天',
         preview: '那天我们一起去了海边...',
-        date: formatDate(Date.now() - 365 * 24 * 60 * 60 * 1000, 'YYYY年MM月DD日'),
-        content: '那天阳光正好，我们一家人去海边玩耍。孩子第一次看到大海，兴奋得不得了。这样的时光，真希望永远不会结束。',
-        images: []
+        date: formatDate(Date.now() - 365 * 24 * 60 * 60 * 1000, 'MMM DD, YYYY'),
+        content: '那天阳光正好，我们一家人去海边玩耍，孩子第一次看到大海，兴奋得不得了。',
+        images: ['https://picsum.photos/600/400?random=memory']
       }
     },
     openMemoryDetail() {
@@ -320,16 +422,66 @@ export default {
 
 <style lang="scss" scoped>
 .page-wrapper {
-  min-height: 100vh;
+  height: 100vh;
   background-color: #FAF7F2;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .status-bar {
+  flex-shrink: 0;
   background-color: #FAF7F2;
+}
+
+// 家庭名称头部
+.family-header {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16rpx 32rpx 24rpx;
+  background: linear-gradient(180deg, #FDF8F3 0%, #FAF7F2 100%);
+}
+
+.family-info {
+  flex: 1;
+}
+
+.family-name {
+  display: block;
+  font-size: 44rpx;
+  font-weight: 600;
+  color: #5C4F42;
+  font-style: italic;
+  line-height: 1.2;
+}
+
+.family-year {
+  display: block;
+  font-size: 24rpx;
+  color: #C4B8A8;
+  margin-top: 4rpx;
+  font-style: italic;
+}
+
+.edit-name-btn {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8rpx;
+}
+
+.edit-icon {
+  font-size: 32rpx;
+  color: #C4B8A8;
 }
 
 // 记忆唤醒条
 .memory-reminder {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   margin: 16rpx 24rpx;
@@ -383,6 +535,7 @@ export default {
 
 // 家庭头像栏
 .family-avatars {
+  flex-shrink: 0;
   padding: 16rpx 0;
 }
 
@@ -445,7 +598,8 @@ export default {
 
 // 日记卡片流
 .timeline-scroll {
-  height: calc(100vh - 300rpx);
+  flex: 1;
+  overflow: hidden;
 }
 
 // 日期分隔线
@@ -592,74 +746,88 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(196, 184, 168, 0.6);
-  backdrop-filter: blur(10rpx);
+  background-color: rgba(196, 184, 168, 0.7);
+  backdrop-filter: blur(20rpx);
   z-index: 1001;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 48rpx;
+  padding: 60rpx;
 }
 
-.popup-content {
+.popup-card {
   width: 100%;
-  max-height: 80vh;
-  background-color: #FFFCF8;
-  border-radius: 32rpx;
+  background-color: #F5F1ED;
+  border-radius: 16rpx;
   overflow: hidden;
+  box-shadow: 0 20rpx 60rpx rgba(92, 79, 66, 0.2);
 }
 
 .popup-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 32rpx;
-  border-bottom: 1rpx solid #E8E4DF;
+  padding: 32rpx 36rpx;
 }
 
-.popup-title {
+.popup-date {
+  font-family: 'Georgia', 'Times New Roman', serif;
   font-size: 32rpx;
+  font-style: italic;
   color: #5C4F42;
   font-weight: 500;
 }
 
 .popup-close {
-  width: 48rpx;
-  height: 48rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 40rpx;
+  font-size: 28rpx;
   color: #9E8F7D;
+  letter-spacing: 1rpx;
 }
 
-.popup-body {
-  padding: 32rpx;
-}
-
-.popup-date {
-  display: block;
-  font-size: 24rpx;
-  color: #9E8F7D;
-  margin-bottom: 16rpx;
-}
-
-.popup-text {
-  font-size: 32rpx;
-  color: #5C4F42;
-  line-height: 1.7;
-}
-
-.popup-images {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16rpx;
-  margin-top: 24rpx;
+.popup-image-wrapper {
+  position: relative;
+  margin: 0 36rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
 }
 
 .popup-image {
-  width: 200rpx;
-  height: 200rpx;
-  border-radius: 16rpx;
+  width: 100%;
+  height: 400rpx;
+  display: block;
+  filter: grayscale(30%) sepia(10%);
+}
+
+.popup-image-placeholder {
+  width: 100%;
+  height: 400rpx;
+  background: linear-gradient(135deg, #D4C8B0 0%, #C4B8A8 100%);
+}
+
+.popup-image-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 28rpx;
+  color: rgba(255, 252, 248, 0.9);
+  background-color: rgba(92, 79, 66, 0.4);
+  padding: 16rpx 32rpx;
+  border-radius: 8rpx;
+  letter-spacing: 1rpx;
+}
+
+.popup-quote {
+  padding: 40rpx 36rpx 48rpx;
+}
+
+.popup-text {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 32rpx;
+  font-style: italic;
+  color: #5C4F42;
+  line-height: 1.8;
+  text-align: center;
+  display: block;
 }
 </style>

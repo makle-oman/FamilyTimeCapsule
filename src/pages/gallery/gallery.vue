@@ -1,5 +1,5 @@
 <template>
-  <view class="page-wrapper gallery-page">
+  <view class="page-wrapper gallery-page" :class="fontClass">
     <!-- 状态栏占位 -->
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
@@ -236,6 +236,7 @@ export default {
       photos: [],
       leftColumnHeight: 0,
       rightColumnHeight: 0,
+      fontClass: 'font-system',
       smartTags: [
         { id: 'all', name: '全部', icon: '📷', count: 0 },
         { id: 'smile', name: '笑脸', icon: '😊', count: 0 },
@@ -259,7 +260,14 @@ export default {
     const systemInfo = uni.getSystemInfoSync()
     this.statusBarHeight = systemInfo.statusBarHeight || 20
 
+    // 加载字体设置
+    this.fontClass = uni.getStorageSync('fontClass') || 'font-system'
+
     this.loadPhotos()
+  },
+  onShow() {
+    // 每次显示页面时刷新字体设置
+    this.fontClass = uni.getStorageSync('fontClass') || 'font-system'
   },
   methods: {
     loadPhotos() {
@@ -501,7 +509,8 @@ export default {
 
 .header-actions {
   display: flex;
-  gap: 24rpx;
+  gap: 20rpx;
+  margin-right: 140rpx; // 避开小程序胶囊按钮
 }
 
 .compare-btn {
@@ -563,6 +572,7 @@ export default {
 // 对比模式提示
 .compare-hint {
   padding: 20rpx 32rpx;
+  margin-bottom: 24rpx; // 与下方图片保持间距
   background-color: rgba(224, 122, 95, 0.1);
   text-align: center;
 

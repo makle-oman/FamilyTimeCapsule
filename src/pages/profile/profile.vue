@@ -1,11 +1,11 @@
 <template>
-  <view class="page-wrapper profile-page">
+  <view class="page-wrapper profile-page" :class="fontClass">
     <!-- 状态栏占位 -->
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
     <scroll-view scroll-y class="profile-scroll">
       <!-- 家庭封面图 -->
-      <view class="family-cover" @tap="changeCover">
+      <view class="family-cover">
         <image
           v-if="familyInfo.coverImage"
           :src="familyInfo.coverImage"
@@ -17,11 +17,11 @@
         </view>
 
         <view class="cover-overlay">
-          <text class="family-name">{{ familyInfo.name }}</text>
+          <text class="family-name" @tap.stop="openEditFamilyName">{{ familyInfo.name }}</text>
           <text class="family-slogan">{{ familyInfo.slogan || '记录每一个温柔的瞬间' }}</text>
         </view>
 
-        <view class="edit-cover-btn">
+        <view class="edit-cover-btn" :style="{ top: (menuButtonTop + menuButtonHeight + 16) + 'px' }" @tap.stop="changeCover">
           <text class="edit-icon">✎</text>
         </view>
       </view>
@@ -171,7 +171,7 @@
           <text class="feature-arrow">›</text>
         </view>
 
-        <view class="feature-item" @tap="openSettings('sound')">
+        <view class="feature-item">
           <view class="feature-icon sound-icon">
             <text>♪</text>
           </view>
@@ -179,7 +179,11 @@
             <text class="feature-title">音效设置</text>
             <text class="feature-desc">{{ soundEnabled ? '已开启' : '已关闭' }}翻页、风铃等音效</text>
           </view>
-          <view class="feature-switch" :class="{ on: soundEnabled }" @tap.stop="toggleSound">
+          <view class="sound-switch" :class="{ on: soundEnabled }" @tap.stop="toggleSound">
+            <view class="switch-track">
+              <view class="switch-icon off-icon">🔇</view>
+              <view class="switch-icon on-icon">🔔</view>
+            </view>
             <view class="switch-thumb"></view>
           </view>
         </view>
@@ -205,6 +209,17 @@
           </view>
           <text class="feature-arrow">›</text>
         </view>
+
+        <view class="feature-item logout-item" @tap="handleLogout">
+          <view class="feature-icon logout-icon">
+            <text>↪</text>
+          </view>
+          <view class="feature-content">
+            <text class="feature-title">退出登录</text>
+            <text class="feature-desc">切换账号或退出当前登录</text>
+          </view>
+          <text class="feature-arrow">›</text>
+        </view>
       </view>
 
       <!-- 底部签名 -->
@@ -223,8 +238,8 @@
     <record-modal :visible="showRecordModal" @close="closeRecord" @submit="submitRecord" />
 
     <!-- 字体设置弹窗 -->
-    <view v-if="showFontSettings" class="settings-popup" @tap.self="closeFontSettings">
-      <view class="settings-content">
+    <view v-if="showFontSettings" class="settings-popup" @tap.stop="closeFontSettings">
+      <view class="settings-content" @tap.stop>
         <view class="settings-header">
           <text class="settings-title">字体设置</text>
           <view class="settings-close" @tap="closeFontSettings">×</view>
@@ -242,11 +257,11 @@
               v-for="font in fontList"
               :key="font.id"
               class="font-option"
-              :class="{ selected: currentFont === font.value }"
+              :class="{ selected: fontClass === font.class }"
               @tap="selectFont(font)"
             >
-              <text class="font-name" :style="{ fontFamily: font.value }">{{ font.name }}</text>
-              <view v-if="currentFont === font.value" class="font-check">✓</view>
+              <text class="font-name" :class="font.class">{{ font.name }}</text>
+              <view v-if="fontClass === font.class" class="font-check">✓</view>
             </view>
           </view>
 
@@ -265,25 +280,40 @@
         </view>
       </view>
     </view>
+
+    <!-- 家庭名称弹窗 -->
+    <family-name-modal
+      :visible="showFamilyNameModal"
+      mode="edit"
+      :initial-name="familyInfo.name"
+      @close="closeFamilyNameModal"
+      @submit="saveFamilyName"
+    />
   </view>
 </template>
 
 <script>
 import TabBar from '@/components/tab-bar/tab-bar.vue'
 import RecordModal from '@/components/record-modal/record-modal.vue'
+import FamilyNameModal from '@/components/family-name-modal/family-name-modal.vue'
 
 export default {
   components: {
     TabBar,
-    RecordModal
+    RecordModal,
+    FamilyNameModal
   },
   data() {
     return {
       statusBarHeight: 20,
+      menuButtonTop: 0,
+      menuButtonHeight: 32,
       showRecordModal: false,
       showFontSettings: false,
+      showFamilyNameModal: false,
       soundEnabled: true,
       currentFont: 'system',
+      fontClass: 'font-system',
       familyInfo: {
         name: '温馨小窝',
         slogan: '记录每一个温柔的瞬间',
@@ -302,9 +332,14 @@ export default {
         lettersCount: 12
       },
       fontList: [
-        { id: 'system', name: '系统默认', value: 'system' },
-        { id: 'round', name: '圆润可爱', value: '"PingFang SC", sans-serif' },
-        { id: 'handwrite', name: '手写楷书', value: '"STKaiti", "KaiTi", serif' }
+        { id: 'system', name: '系统默认', value: 'system', class: 'font-system' },
+        { id: 'round', name: '圆润可爱', value: '"PingFang SC", sans-serif', class: 'font-round' },
+        { id: 'handwrite', name: '手写楷书', value: '"Kaiti SC", serif', class: 'font-handwrite' },
+        { id: 'songti', name: '宋体经典', value: '"Songti SC", serif', class: 'font-songti' },
+        { id: 'heiti', name: '黑体稳重', value: '"Heiti SC", sans-serif', class: 'font-heiti' },
+        { id: 'light', name: '纤细优雅', value: '"PingFang SC", sans-serif', class: 'font-light' },
+        { id: 'bold', name: '醒目粗体', value: '"PingFang SC", sans-serif', class: 'font-bold' },
+        { id: 'wide', name: '宽松舒适', value: '"PingFang SC", sans-serif', class: 'font-wide' }
       ]
     }
   },
@@ -317,10 +352,96 @@ export default {
     const systemInfo = uni.getSystemInfoSync()
     this.statusBarHeight = systemInfo.statusBarHeight || 20
 
+    // 获取胶囊按钮位置信息
+    // #ifdef MP-WEIXIN
+    const menuButtonInfo = uni.getMenuButtonBoundingClientRect()
+    this.menuButtonTop = menuButtonInfo.top
+    this.menuButtonHeight = menuButtonInfo.height
+    // #endif
+
     // 加载音效设置
     this.soundEnabled = uni.getStorageSync('soundEnabled') !== false
+
+    // 加载字体设置
+    this.loadFontSettings()
+
+    // 加载家庭信息
+    this.loadFamilyInfo()
+  },
+  onShow() {
+    // 每次显示页面时刷新字体设置
+    this.loadFontSettings()
+    // 刷新家庭信息
+    this.loadFamilyInfo()
   },
   methods: {
+    loadFamilyInfo() {
+      const familyData = uni.getStorageSync('familyData')
+      if (familyData && familyData.familyName) {
+        this.familyInfo.name = familyData.familyName
+      }
+    },
+    openEditFamilyName() {
+      this.showFamilyNameModal = true
+    },
+    closeFamilyNameModal() {
+      this.showFamilyNameModal = false
+    },
+    saveFamilyName(name) {
+      this.familyInfo.name = name
+      const familyData = uni.getStorageSync('familyData') || {}
+      familyData.familyName = name
+      uni.setStorageSync('familyData', familyData)
+
+      this.showFamilyNameModal = false
+      uni.showToast({
+        title: '已保存',
+        icon: 'success'
+      })
+    },
+    handleLogout() {
+      uni.showModal({
+        title: '确认退出',
+        content: '确定要退出当前账号吗？',
+        confirmColor: '#5C4F42',
+        success: (res) => {
+          if (res.confirm) {
+            // 清除登录信息
+            uni.removeStorageSync('token')
+            uni.removeStorageSync('userInfo')
+
+            uni.showToast({
+              title: '已退出登录',
+              icon: 'success'
+            })
+
+            setTimeout(() => {
+              uni.reLaunch({
+                url: '/pages/login/login'
+              })
+            }, 1500)
+          }
+        }
+      })
+    },
+    loadFontSettings() {
+      const savedFontClass = uni.getStorageSync('fontClass') || 'font-system'
+      this.fontClass = savedFontClass
+      const font = this.fontList.find(f => f.class === savedFontClass)
+      if (font) {
+        this.currentFont = font.value
+      }
+    },
+    applyGlobalFont(fontClass) {
+      // 存储 fontClass 供其他页面使用
+      uni.setStorageSync('fontClass', fontClass)
+      // 设置全局字体
+      const app = getApp()
+      if (app && app.globalData) {
+        app.globalData.currentFont = this.currentFont
+        app.globalData.fontClass = fontClass
+      }
+    },
     changeCover() {
       uni.chooseImage({
         count: 1,
@@ -364,7 +485,16 @@ export default {
     },
     selectFont(font) {
       this.currentFont = font.value
+      this.fontClass = font.class
       uni.setStorageSync('fontFamily', font.value)
+      uni.setStorageSync('fontClass', font.class)
+      this.applyGlobalFont(font.class)
+
+      // 提示用户
+      uni.showToast({
+        title: '字体已更换',
+        icon: 'success'
+      })
     },
     uploadHandwrite() {
       uni.showToast({
@@ -376,12 +506,44 @@ export default {
       this.soundEnabled = !this.soundEnabled
       uni.setStorageSync('soundEnabled', this.soundEnabled)
 
-      // 播放提示音
+      // 开启时播放提示音效
       if (this.soundEnabled) {
+        this.playSound('switch')
+        // 震动反馈
         // #ifdef MP-WEIXIN
         uni.vibrateShort({ type: 'light' })
         // #endif
       }
+
+      // 显示提示
+      uni.showToast({
+        title: this.soundEnabled ? '音效已开启' : '音效已关闭',
+        icon: 'none',
+        duration: 1500
+      })
+    },
+    // 播放音效
+    playSound(type) {
+      if (!this.soundEnabled && type !== 'switch') return
+
+      const soundMap = {
+        switch: '/static/audio/switch.mp3',
+        page: '/static/audio/page-flip.mp3',
+        bell: '/static/audio/wind-bell.mp3'
+      }
+
+      const audioContext = uni.createInnerAudioContext()
+      audioContext.src = soundMap[type] || soundMap.switch
+      audioContext.volume = 0.5
+      audioContext.play()
+
+      // 播放完成后销毁
+      audioContext.onEnded(() => {
+        audioContext.destroy()
+      })
+      audioContext.onError(() => {
+        audioContext.destroy()
+      })
     },
     openRecord() {
       this.showRecordModal = true
@@ -470,7 +632,7 @@ export default {
 .edit-cover-btn {
   position: absolute;
   top: 100rpx;
-  right: 32rpx;
+  right: 24rpx;
   width: 56rpx;
   height: 56rpx;
   background-color: rgba(255, 252, 248, 0.9);
@@ -800,7 +962,7 @@ export default {
 
 .book-3d {
   perspective: 500px;
-  margin-right: 24rpx;
+  margin-right: 32rpx;
 }
 
 .book-cover {
@@ -870,6 +1032,7 @@ export default {
 
 .book-info {
   flex: 1;
+  margin-left: 10rpx;
 }
 
 .book-hint {
@@ -929,6 +1092,15 @@ export default {
     background-color: rgba(224, 122, 95, 0.1);
     color: #E07A5F;
   }
+
+  &.logout-icon {
+    background-color: rgba(158, 143, 125, 0.1);
+    color: #9E8F7D;
+  }
+}
+
+.logout-item {
+  background-color: rgba(158, 143, 125, 0.05);
 }
 
 .feature-content {
@@ -953,31 +1125,72 @@ export default {
   color: #C4B8A8;
 }
 
-// 开关
-.feature-switch {
-  width: 88rpx;
+// 音效开关
+.sound-switch {
+  position: relative;
+  width: 100rpx;
   height: 48rpx;
-  background-color: #E8E4DF;
+  background: linear-gradient(135deg, #E8E4DF 0%, #D4CFC7 100%);
   border-radius: 24rpx;
-  padding: 4rpx;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: inset 0 2rpx 4rpx rgba(92, 79, 66, 0.1);
 
   &.on {
-    background-color: #8A9A5B;
+    background: linear-gradient(135deg, #8A9A5B 0%, #7A8A4B 100%);
+    box-shadow: 0 4rpx 12rpx rgba(138, 154, 91, 0.3);
 
     .switch-thumb {
-      transform: translateX(40rpx);
+      left: 56rpx;
+      background: linear-gradient(135deg, #FFFCF8 0%, #F5F1ED 100%);
+    }
+
+    .on-icon {
+      opacity: 1;
+    }
+
+    .off-icon {
+      opacity: 0;
     }
   }
 }
 
+.switch-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12rpx;
+}
+
+.switch-icon {
+  font-size: 24rpx;
+  transition: opacity 0.3s ease;
+
+  &.off-icon {
+    opacity: 0.6;
+  }
+
+  &.on-icon {
+    opacity: 0;
+  }
+}
+
 .switch-thumb {
+  position: absolute;
+  top: 50%;
+  left: 4rpx;
+  transform: translateY(-50%);
   width: 40rpx;
   height: 40rpx;
-  background-color: #FFFCF8;
+  background: linear-gradient(135deg, #FFFCF8 0%, #F0EBE5 100%);
   border-radius: 50%;
-  box-shadow: 0 2rpx 8rpx rgba(92, 79, 66, 0.2);
-  transition: transform 0.3s ease;
+  box-shadow: 0 4rpx 12rpx rgba(92, 79, 66, 0.25), 0 1rpx 3rpx rgba(92, 79, 66, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
 }
 
 // 底部签名
@@ -1016,6 +1229,7 @@ export default {
   z-index: 1001;
   display: flex;
   align-items: flex-end;
+  padding-bottom: 10rpx;
 }
 
 .settings-content {

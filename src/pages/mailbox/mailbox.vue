@@ -1,5 +1,5 @@
 <template>
-  <view class="page-wrapper mailbox-page">
+  <view class="page-wrapper mailbox-page" :class="fontClass">
     <!-- 状态栏占位 -->
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
@@ -178,8 +178,8 @@
     </view>
 
     <!-- 写信弹窗 -->
-    <view v-if="showWritePopup" class="write-popup" @tap.self="closeWritePopup">
-      <view class="write-content">
+    <view v-if="showWritePopup" class="write-popup" @tap.stop="closeWritePopup">
+      <view class="write-content" @tap.stop>
         <view class="write-header">
           <text class="write-title">写给未来的信</text>
           <view class="write-close" @tap="closeWritePopup">×</view>
@@ -264,6 +264,7 @@ export default {
       archivedLetters: [],
       questionList: [],
       hasNewQuestion: true,
+      fontClass: 'font-system',
       familyMembers: [
         { id: '1', name: '爸爸', avatar: '' },
         { id: '2', name: '妈妈', avatar: '' },
@@ -294,7 +295,14 @@ export default {
     const systemInfo = uni.getSystemInfoSync()
     this.statusBarHeight = systemInfo.statusBarHeight || 20
 
+    // 加载字体设置
+    this.fontClass = uni.getStorageSync('fontClass') || 'font-system'
+
     this.loadData()
+  },
+  onShow() {
+    // 每次显示页面时刷新字体设置
+    this.fontClass = uni.getStorageSync('fontClass') || 'font-system'
   },
   methods: {
     loadData() {
@@ -470,7 +478,11 @@ export default {
 <style lang="scss" scoped>
 .mailbox-page {
   background: radial-gradient(ellipse at center, #FAF7F2 0%, #E6DED4 100%);
-  min-height: 100vh;
+  height: 100vh;
+  padding-top: 20rpx;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .status-bar {
@@ -497,7 +509,8 @@ export default {
 }
 
 .mailbox-scroll {
-  height: calc(100vh - 200rpx);
+  flex: 1;
+  overflow: hidden;
 }
 
 // 区块样式
@@ -867,7 +880,7 @@ export default {
 // 信纸
 .letter-paper {
   background-color: #FFFCF8;
-  border-radius: 16rpx;
+  border-radius: 0 0 16rpx 16rpx;
   box-shadow: 0 8rpx 32rpx rgba(92, 79, 66, 0.3);
   opacity: 0;
   transform: translateY(100rpx);
@@ -1004,22 +1017,14 @@ export default {
 .receiver-options {
   display: flex;
   flex-wrap: wrap;
-  gap: 16rpx;
+  gap: 24rpx;
 }
 
 .receiver-option {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 16rpx;
-  border-radius: 16rpx;
-  border: 2rpx solid transparent;
   transition: all 0.3s ease;
-
-  &.selected {
-    border-color: #E07A5F;
-    background-color: rgba(224, 122, 95, 0.1);
-  }
 }
 
 .receiver-avatar {
@@ -1027,11 +1032,22 @@ export default {
   height: 72rpx;
   border-radius: 50%;
   margin-bottom: 8rpx;
+  border: 3rpx solid transparent;
+  transition: all 0.3s ease;
+
+  .receiver-option.selected & {
+    border-color: #E07A5F;
+  }
 }
 
 .receiver-name {
   font-size: 24rpx;
-  color: #5C4F42;
+  color: #9E8F7D;
+  transition: all 0.3s ease;
+
+  .receiver-option.selected & {
+    color: #E07A5F;
+  }
 }
 
 .date-picker {
@@ -1074,18 +1090,26 @@ export default {
 }
 
 .write-footer {
-  padding: 24rpx 32rpx;
-  padding-bottom: calc(24rpx + constant(safe-area-inset-bottom));
-  padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
+  padding: 16rpx 32rpx 48rpx;
+  padding-bottom: calc(48rpx + constant(safe-area-inset-bottom));
+  padding-bottom: calc(48rpx + env(safe-area-inset-bottom));
 }
 
 .seal-btn {
   width: 100%;
-  padding: 28rpx;
+  height: 88rpx;
   background: linear-gradient(135deg, #E07A5F 0%, #D4654A 100%);
-  border-radius: 16rpx;
-  text-align: center;
+  border-radius: 44rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   box-shadow: 0 8rpx 24rpx rgba(224, 122, 95, 0.3);
+  transition: all 0.3s ease;
+
+  &:active {
+    transform: scale(0.98);
+    box-shadow: 0 4rpx 16rpx rgba(224, 122, 95, 0.3);
+  }
 }
 
 .seal-text {

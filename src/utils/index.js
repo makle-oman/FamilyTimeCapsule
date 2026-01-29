@@ -2,6 +2,9 @@
  * 工具函数
  */
 
+// 英文月份缩写
+const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
 // 格式化日期
 export function formatDate(timestamp, format = 'YYYY年MM月DD日') {
   const date = new Date(timestamp)
@@ -10,9 +13,11 @@ export function formatDate(timestamp, format = 'YYYY年MM月DD日') {
   const day = String(date.getDate()).padStart(2, '0')
   const hour = String(date.getHours()).padStart(2, '0')
   const minute = String(date.getMinutes()).padStart(2, '0')
+  const monthShort = monthNames[date.getMonth()]
 
   return format
     .replace('YYYY', year)
+    .replace('MMM', monthShort)
     .replace('MM', month)
     .replace('DD', day)
     .replace('HH', hour)
