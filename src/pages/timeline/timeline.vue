@@ -7,7 +7,7 @@
     <view class="family-header">
       <view class="family-info">
         <text class="family-name">{{ familyName }}</text>
-        <text class="family-year">Established {{ establishedYear }}</text>
+        <text class="family-year">成立 {{ establishedYear }}</text>
       </view>
       <view class="edit-name-btn" @tap="openEditName">
         <text class="edit-icon">✎</text>
@@ -83,7 +83,7 @@
           <view class="empty-book"></view>
         </view>
         <text class="empty-text">这里还空着，等待第一个温柔的故事</text>
-        <view class="empty-hint" @tap="openRecord">
+        <view class="empty-hint" @tap="openRecord" v-if="false">
           <text>点击中间的 + 开始记录</text>
         </view>
       </view>
@@ -157,6 +157,7 @@
 
 <script>
 import { formatDate, generateId, getWarmMessage } from '@/utils/index.js'
+import { getMyFamily, createFamily, getMemories, getYearAgoMemories, createMemory, addResonance, getFamilyMembers, updateFamily } from '@/utils/api.js'
 import TabBar from '@/components/tab-bar/tab-bar.vue'
 import MemoryCard from '@/components/memory-card/memory-card.vue'
 import RecordModal from '@/components/record-modal/record-modal.vue'
@@ -181,12 +182,10 @@ export default {
       loading: false,
       fontClass: 'font-system',
       familyName: '',
+      familyId: '',
+      inviteCode: '',
       establishedYear: new Date().getFullYear(),
-      familyMembers: [
-        { id: '1', name: '爸爸', avatar: '', online: true },
-        { id: '2', name: '妈妈', avatar: '', online: true },
-        { id: '3', name: '我', avatar: '', online: true }
-      ],
+      familyMembers: [],
       memories: [],
       todayMemory: null,
       hasUnansweredQuestion: false,
@@ -198,7 +197,7 @@ export default {
     groupedMemories() {
       const groups = {}
       this.memories.forEach(memory => {
-        const date = formatDate(memory.createTime, 'MM月DD日')
+        const date = formatDate(memory.createTime || memory.createdAt, 'MM月DD日')
         if (!groups[date]) {
           groups[date] = []
         }
@@ -207,7 +206,7 @@ export default {
       return groups
     }
   },
-  onLoad() {
+  onLoad(options) {
     // 获取状态栏高度
     const systemInfo = uni.getSystemInfoSync()
     this.statusBarHeight = systemInfo.statusBarHeight || 20
@@ -216,33 +215,47 @@ export default {
     this.fontClass = uni.getStorageSync('fontClass') || 'font-system'
 
     // 加载家庭信息
-    this.loadFamilyInfo()
-
-    // 加载数据
-    this.loadMemories()
-    this.checkTodayMemory()
-
-    // 首次进入显示记忆唤醒条动画
-    setTimeout(() => {
-      this.showReminder = true
-    }, 500)
+    this.loadFamilyInfo(options?.needFamily === 'true')
   },
   onShow() {
     // 每次显示页面时刷新字体设置
     this.fontClass = uni.getStorageSync('fontClass') || 'font-system'
-    // 刷新家庭信息
-    this.loadFamilyInfo()
   },
   methods: {
-    loadFamilyInfo() {
-      const familyData = uni.getStorageSync('familyData')
-      if (familyData && familyData.familyName) {
-        this.familyName = familyData.familyName
-        this.establishedYear = familyData.establishedYear || new Date().getFullYear()
-      } else {
-        // 首次登录，显示设置家庭名称弹窗
-        this.familyNameModalMode = 'welcome'
-        this.showFamilyNameModal = true
+    async loadFamilyInfo(needFamily = false) {
+      try {
+        const res = await getMyFamily();
+        if (res.data) {
+          this.familyName = res.data.name;
+          this.familyId = res.data.id;
+          this.inviteCode = res.data.inviteCode;
+          this.establishedYear = res.data.establishedYear || new Date().getFullYear();
+          this.familyMembers = (res.data.members || []).map(m => ({
+            id: m.id,
+            name: m.nickname,
+            avatar: m.avatar || '',
+            online: true
+          }));
+
+          // 加载数据
+          this.loadMemories();
+          this.checkTodayMemory();
+
+          // 首次进入显示记忆唤醒条动画
+          setTimeout(() => {
+            this.showReminder = true;
+          }, 500);
+        } else {
+          // 没有家庭，显示创建/加入家庭弹窗
+          this.familyNameModalMode = 'welcome';
+          this.showFamilyNameModal = true;
+        }
+      } catch (error) {
+        if (needFamily) {
+          this.familyNameModalMode = 'welcome';
+          this.showFamilyNameModal = true;
+        }
+        console.error('加载家庭信息失败:', error);
       }
     },
     openEditName() {
@@ -252,109 +265,122 @@ export default {
     closeFamilyNameModal() {
       this.showFamilyNameModal = false
     },
-    saveFamilyName(name) {
-      this.familyName = name
-      const familyData = uni.getStorageSync('familyData') || {}
-      familyData.familyName = name
-      familyData.establishedYear = familyData.establishedYear || new Date().getFullYear()
-      this.establishedYear = familyData.establishedYear
-      uni.setStorageSync('familyData', familyData)
+    async saveFamilyName(name) {
+      try {
+        if (this.familyId) {
+          // 更新家庭名称
+          await updateFamily(this.familyId, { name });
+          this.familyName = name;
+        } else {
+          // 创建新家庭
+          const res = await createFamily({
+            name,
+            establishedYear: new Date().getFullYear()
+          });
+          this.familyName = res.data.name;
+          this.familyId = res.data.id;
+          this.inviteCode = res.data.inviteCode;
+          this.establishedYear = res.data.establishedYear;
+          this.familyMembers = (res.data.members || []).map(m => ({
+            id: m.id,
+            name: m.nickname,
+            avatar: m.avatar || '',
+            online: true
+          }));
 
-      this.showFamilyNameModal = false
+          // 显示邀请码
+          uni.showModal({
+            title: '家庭创建成功',
+            content: `邀请码: ${res.data.inviteCode}\n请将邀请码分享给家人，他们可以在注册时填写邀请码加入家庭。`,
+            showCancel: false,
+            confirmText: '我知道了',
+            confirmColor: '#5C4F42'
+          });
+        }
 
-      if (this.familyNameModalMode === 'welcome') {
-        uni.showToast({
-          title: '欢迎回家',
-          icon: 'success'
-        })
-      } else {
-        uni.showToast({
-          title: '已保存',
-          icon: 'success'
-        })
+        this.showFamilyNameModal = false;
+
+        if (this.familyNameModalMode === 'edit') {
+          uni.showToast({
+            title: '已保存',
+            icon: 'success'
+          });
+        }
+      } catch (error) {
+        console.error('保存家庭名称失败:', error);
       }
     },
-    loadMemories() {
-      this.loading = true
+    async loadMemories() {
+      if (this.loading || !this.familyId) return;
+      this.loading = true;
 
-      // 模拟数据加载
-      setTimeout(() => {
-        const mockMemories = [
-          {
-            id: generateId(),
-            authorId: '1',
-            authorName: '爸爸',
-            authorAvatar: '',
+      try {
+        const res = await getMemories({
+          page: this.pageNo,
+          limit: 20
+        });
+
+        if (res.data && res.data.items) {
+          // 转换数据格式适配前端组件
+          const newMemories = res.data.items.map(m => ({
+            id: m.id,
+            authorId: m.author?.id,
+            authorName: m.author?.nickname || '未知',
+            authorAvatar: m.author?.avatar || '',
             authorOnline: true,
-            content: '今天带孩子去公园放风筝，春天的风很温柔，就像我们的生活一样。',
-            images: [],
-            tags: ['日常', '出行'],
-            createTime: Date.now() - 1000 * 60 * 30,
-            resonanceCount: 2
-          },
-          {
-            id: generateId(),
-            authorId: '2',
-            authorName: '妈妈',
-            authorAvatar: '',
-            authorOnline: true,
-            content: '学会了一道新菜，虽然卖相不太好，但家人都说好吃。',
-            images: [],
-            tags: ['美食'],
-            createTime: Date.now() - 1000 * 60 * 60 * 2,
-            resonanceCount: 3,
-            parallelViews: [
-              {
-                authorId: '1',
-                authorName: '爸爸',
-                avatar: '',
-                online: true,
-                content: '今天妈妈做的菜真的很好吃，虽然看起来有点奇怪，但味道棒极了！孩子也吃得特别香。',
-                images: [],
-                tags: ['美食', '家庭'],
-                resonanceCount: 2
-              },
-              {
-                authorId: '3',
-                authorName: '我',
-                avatar: '',
-                online: true,
-                content: '妈妈今天做的菜超级好吃！我吃了两碗饭，爸爸也夸妈妈的厨艺越来越好了。',
-                images: [],
-                tags: ['美食'],
-                resonanceCount: 1
-              }
-            ]
-          },
-          {
-            id: generateId(),
-            authorId: '3',
-            authorName: '我',
-            authorAvatar: '',
-            authorOnline: true,
-            content: '今天考试成绩出来了，虽然不是满分，但是进步很大。感谢爸爸妈妈的鼓励！',
-            images: [],
-            tags: ['成长', '感恩'],
-            createTime: Date.now() - 1000 * 60 * 60 * 24,
-            resonanceCount: 5,
-            isOldMemory: false
+            content: m.content,
+            images: m.images || [],
+            tags: m.tags || [],
+            createTime: new Date(m.createdAt).getTime(),
+            resonanceCount: m.resonanceCount || 0,
+            isOldMemory: m.isOldMemory || false,
+            voice: m.type === 'VOICE' ? { duration: m.voiceDuration } : null,
+            parallelViews: m.parallelViews?.map(v => ({
+              authorId: v.author?.id,
+              authorName: v.author?.nickname || '未知',
+              avatar: v.author?.avatar || '',
+              online: true,
+              content: v.content,
+              images: v.images || [],
+              tags: v.tags || [],
+              resonanceCount: v.resonanceCount || 0
+            }))
+          }));
+
+          if (this.pageNo === 1) {
+            this.memories = newMemories;
+          } else {
+            this.memories = [...this.memories, ...newMemories];
           }
-        ]
 
-        this.memories = [...this.memories, ...mockMemories]
-        this.loading = false
-        this.pageNo++
-      }, 1000)
+          this.hasMore = res.data.page < res.data.totalPages;
+          this.pageNo++;
+        }
+      } catch (error) {
+        console.error('加载记忆失败:', error);
+      } finally {
+        this.loading = false;
+      }
     },
-    checkTodayMemory() {
-      // 检查是否有365天前的今天的记忆
-      // 模拟数据
-      this.todayMemory = {
-        title: '365天前的今天',
-        preview: '那天我们一起去了海边...',
-        date: formatDate(Date.now() - 365 * 24 * 60 * 60 * 1000, 'MMM DD, YYYY'),
-        content: '那天阳光正好，我们一家人去海边玩耍，孩子第一次看到大海，兴奋得不得了。',
-        images: ['https://picsum.photos/600/400?random=memory']
+    async checkTodayMemory() {
+      if (!this.familyId) return;
+
+      try {
+        const res = await getYearAgoMemories();
+        if (res.data && res.data.length > 0) {
+          const memory = res.data[0];
+          this.todayMemory = {
+            title: '365天前的今天',
+            preview: memory.content?.substring(0, 30) + '...',
+            date: formatDate(new Date(memory.createdAt).getTime(), 'MMM DD, YYYY'),
+            content: memory.content,
+            images: memory.images || []
+          };
+        } else {
+          this.todayMemory = null;
+        }
+      } catch (error) {
+        this.todayMemory = null;
       }
     },
     openMemoryDetail() {
@@ -369,48 +395,81 @@ export default {
     closeRecord() {
       this.showRecordModal = false
     },
-    submitRecord(data) {
-      // 添加新记录到列表
-      const newMemory = {
-        id: generateId(),
-        authorId: '3',
-        authorName: '我',
-        authorAvatar: '',
-        authorOnline: true,
-        content: data.content,
-        images: data.images,
-        tags: data.tags,
-        voice: data.type === 'voice' ? { duration: data.voiceDuration } : null,
-        createTime: data.createTime,
-        resonanceCount: 0
-      }
+    async submitRecord(data) {
+      try {
+        const res = await createMemory({
+          type: (data.type || 'text').toUpperCase(),
+          content: data.content,
+          tags: data.tags || [],
+          images: data.images || [],
+          voiceDuration: data.voiceDuration,
+          voiceUrl: data.voiceUrl
+        });
 
-      this.memories.unshift(newMemory)
-      this.scrollTop = 0
+        if (res.data) {
+          // 将新记录添加到列表顶部
+          const m = res.data;
+          const newMemory = {
+            id: m.id,
+            authorId: m.author?.id,
+            authorName: m.author?.nickname || '我',
+            authorAvatar: m.author?.avatar || '',
+            authorOnline: true,
+            content: m.content,
+            images: m.images || [],
+            tags: m.tags || [],
+            createTime: new Date(m.createdAt).getTime(),
+            resonanceCount: 0,
+            voice: m.type === 'VOICE' ? { duration: m.voiceDuration } : null
+          };
+          this.memories.unshift(newMemory);
+          this.scrollTop = 0;
+
+          uni.showToast({
+            title: '记录成功',
+            icon: 'success'
+          });
+        }
+      } catch (error) {
+        console.error('提交记录失败:', error);
+      }
     },
-    handleResonance(memoryId) {
-      // 处理共鸣
-      const memory = this.memories.find(m => m.id === memoryId)
-      if (memory) {
-        memory.resonanceCount = (memory.resonanceCount || 0) + 1
+    async handleResonance(memoryId) {
+      try {
+        await addResonance(memoryId);
+        // 更新本地计数
+        const memory = this.memories.find(m => m.id === memoryId);
+        if (memory) {
+          memory.resonanceCount = (memory.resonanceCount || 0) + 1;
+        }
+      } catch (error) {
+        console.error('共鸣失败:', error);
       }
     },
     handlePlayVoice(voice) {
-      // 播放语音
       console.log('播放语音', voice)
     },
     openQuestion() {
-      // 打开问答
       uni.showToast({
         title: '问答功能开发中',
         icon: 'none'
       })
     },
     addMember() {
-      uni.showToast({
-        title: '邀请家人功能开发中',
-        icon: 'none'
-      })
+      if (this.inviteCode) {
+        uni.showModal({
+          title: '邀请家人',
+          content: `家庭邀请码: ${this.inviteCode}\n请将邀请码分享给家人，他们在注册时填写即可加入。`,
+          showCancel: false,
+          confirmText: '我知道了',
+          confirmColor: '#5C4F42'
+        });
+      } else {
+        uni.showToast({
+          title: '请先创建家庭',
+          icon: 'none'
+        });
+      }
     },
     loadMore() {
       if (this.loading || !this.hasMore) return
@@ -642,30 +701,51 @@ export default {
 .empty-book {
   width: 100rpx;
   height: 120rpx;
-  background: linear-gradient(135deg, #E8DCC4 0%, #D4C8B0 100%);
-  border-radius: 8rpx;
   position: relative;
+  border-radius: 8rpx;
+  background: #FFFCF8;
+  overflow: hidden;
 
+  // 跑马灯边框
   &::before {
     content: '';
     position: absolute;
-    left: 8rpx;
-    top: 8rpx;
-    right: 8rpx;
-    bottom: 8rpx;
-    background-color: #FFFCF8;
-    border-radius: 4rpx;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      #E07A5F 60deg,
+      #D4C8B0 120deg,
+      transparent 180deg,
+      #E07A5F 240deg,
+      #D4C8B0 300deg,
+      transparent 360deg
+    );
+    animation: borderRotate 2s linear infinite;
   }
 
+  // 内部白色区域
   &::after {
     content: '';
     position: absolute;
-    left: 0;
-    top: 20%;
-    bottom: 20%;
-    width: 8rpx;
-    background-color: #E07A5F;
-    border-radius: 0 4rpx 4rpx 0;
+    left: 4rpx;
+    top: 4rpx;
+    right: 4rpx;
+    bottom: 4rpx;
+    background: linear-gradient(135deg, #FFFCF8 0%, #F5F1ED 100%);
+    border-radius: 6rpx;
+  }
+}
+
+@keyframes borderRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }
 

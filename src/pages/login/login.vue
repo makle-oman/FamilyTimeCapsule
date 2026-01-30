@@ -190,6 +190,8 @@
 </template>
 
 <script>
+import { login, register } from '../../utils/api.js';
+
 export default {
   data() {
     return {
@@ -255,61 +257,79 @@ export default {
       this.showLoginPwd = false
       this.showRegPwd = false
     },
-    handleLogin() {
+    async handleLogin() {
       if (!this.canLogin || this.isLoggingIn) return
 
       this.isLoggingIn = true
 
-      // 模拟登录请求
-      setTimeout(() => {
-        const userInfo = {
-          id: '1',
-          nickname: '家人',
+      try {
+        const res = await login({
           phone: this.loginForm.phone,
-          avatar: ''
-        }
+          password: this.loginForm.password
+        });
 
-        uni.setStorageSync('token', 'mock_token_' + Date.now())
-        uni.setStorageSync('userInfo', userInfo)
+        // 保存 token 和用户信息
+        uni.setStorageSync('token', res.data.token);
+        uni.setStorageSync('userInfo', res.data.user);
         uni.setStorageSync('rememberedAccount', {
           phone: this.loginForm.phone
-        })
-
-        this.isLoggingIn = false
+        });
 
         uni.showToast({
           title: '欢迎回家',
           icon: 'success'
-        })
+        });
 
         setTimeout(() => {
           uni.reLaunch({
             url: '/pages/timeline/timeline'
-          })
-        }, 1500)
-      }, 1500)
+          });
+        }, 1500);
+      } catch (error) {
+        console.error('登录失败:', error);
+      } finally {
+        this.isLoggingIn = false;
+      }
     },
-    handleRegister() {
+    async handleRegister() {
       if (!this.canRegister || this.isRegistering) return
 
       this.isRegistering = true
 
-      // 模拟注册请求
-      setTimeout(() => {
-        this.isRegistering = false
+      try {
+        const res = await register({
+          nickname: this.registerForm.nickname,
+          phone: this.registerForm.phone,
+          password: this.registerForm.password,
+          familyCode: this.registerForm.familyCode || undefined
+        });
 
-        uni.showModal({
-          title: '注册申请已提交',
-          content: '请等待管理员审核，审核通过后即可登录',
-          showCancel: false,
-          confirmText: '我知道了',
-          confirmColor: '#5C4F42',
-          success: () => {
-            this.currentTab = 'login'
-            this.loginForm.phone = this.registerForm.phone
+        // 注册成功，保存 token 和用户信息
+        uni.setStorageSync('token', res.data.token);
+        uni.setStorageSync('userInfo', res.data.user);
+
+        uni.showToast({
+          title: res.message || '注册成功',
+          icon: 'success'
+        });
+
+        setTimeout(() => {
+          // 如果用户没有家庭，跳转到创建/加入家庭页面
+          if (!res.data.user.familyId) {
+            uni.reLaunch({
+              url: '/pages/timeline/timeline?needFamily=true'
+            });
+          } else {
+            uni.reLaunch({
+              url: '/pages/timeline/timeline'
+            });
           }
-        })
-      }, 1500)
+        }, 1500);
+      } catch (error) {
+        console.error('注册失败:', error);
+      } finally {
+        this.isRegistering = false;
+      }
     }
   }
 }

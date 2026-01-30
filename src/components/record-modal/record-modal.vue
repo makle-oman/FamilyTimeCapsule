@@ -37,13 +37,11 @@
           @tap="selectType('photo')"
         >
           <view class="type-icon-wrapper" :class="{ active: recordType === 'photo' }">
-            <svg viewBox="0 0 24 24" width="24" height="24">
-              <path
-                d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0-8c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z"
-                :fill="recordType === 'photo' ? '#E07A5F' : '#9E8F7D'"
-              />
-              <rect x="3" y="14" width="18" height="8" rx="2" :fill="recordType === 'photo' ? '#E07A5F' : '#9E8F7D'" />
-            </svg>
+            <image
+              class="type-icon-img"
+              :src="recordType === 'photo' ? '/static/icons/record/photo-active.svg' : '/static/icons/record/photo.svg'"
+              mode="aspectFit"
+            />
           </view>
           <text class="type-label">Photo</text>
         </view>
@@ -54,12 +52,11 @@
           @tap="selectType('voice')"
         >
           <view class="type-icon-wrapper" :class="{ active: recordType === 'voice' }">
-            <svg viewBox="0 0 24 24" width="24" height="24">
-              <path
-                d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"
-                :fill="recordType === 'voice' ? '#E07A5F' : '#9E8F7D'"
-              />
-            </svg>
+            <image
+              class="type-icon-img"
+              :src="recordType === 'voice' ? '/static/icons/record/voice-active.svg' : '/static/icons/record/voice.svg'"
+              mode="aspectFit"
+            />
           </view>
           <text class="type-label">Voice</text>
         </view>
@@ -123,12 +120,11 @@
             @touchend="stopRecording"
           >
             <view class="voice-inner">
-              <svg viewBox="0 0 24 24" width="48" height="48">
-                <path
-                  d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"
-                  fill="#FFFCF8"
-                />
-              </svg>
+              <image
+                class="voice-icon-img"
+                src="/static/icons/record/mic.svg"
+                mode="aspectFit"
+              />
             </view>
           </view>
           <text class="voice-hint">{{ isRecording ? recordingTime + '"' : 'Hold to record' }}</text>
@@ -146,14 +142,22 @@
 
       <!-- 底部快捷标签 -->
       <view class="bottom-tags">
+        <!-- 已有标签 -->
         <view
           v-for="tag in quickTags"
           :key="tag.id"
           class="bottom-tag"
           :class="{ selected: selectedTags.includes(tag.id) }"
           @tap="toggleTag(tag.id)"
+          @longpress="showDeleteTag(tag)"
         >
-          #{{ tag.name }}
+          <text class="tag-text">#{{ tag.name }}</text>
+          <view v-if="editingTagId === tag.id" class="tag-delete" @tap.stop="deleteTag(tag.id)">×</view>
+        </view>
+
+        <!-- 添加标签按钮 -->
+        <view class="bottom-tag add-tag-btn" @tap="showAddTagInput">
+          <text class="add-tag-icon">+</text>
         </view>
       </view>
 
@@ -168,11 +172,32 @@
         </view>
       </view>
     </view>
+
+    <!-- 添加标签输入弹窗 - 放在最外层 -->
+    <view v-if="showTagInput" class="tag-input-modal" @tap.stop="hideAddTagInput">
+      <view class="tag-input-content" @tap.stop>
+        <text class="tag-input-title">添加标签</text>
+        <input
+          class="tag-input"
+          v-model="newTagName"
+          placeholder="输入标签名称"
+          placeholder-class="tag-input-placeholder"
+          :maxlength="10"
+          focus
+          @confirm="confirmAddTag"
+        />
+        <view class="tag-input-actions">
+          <view class="tag-action-btn cancel" @tap.stop="hideAddTagInput">取消</view>
+          <view class="tag-action-btn confirm" @tap.stop="confirmAddTag">确定</view>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
 <script>
 import { formatDate } from '@/utils/index.js'
+import { getTags, createTag, deleteTag as deleteTagApi } from '@/utils/api.js'
 
 export default {
   name: 'RecordModal',
@@ -188,18 +213,17 @@ export default {
       textContent: '',
       selectedImages: [],
       selectedTags: [],
-      quickTags: [
-        { id: 'happy', name: 'Happy' },
-        { id: 'firsttime', name: 'FirstTime' },
-        { id: 'funny', name: 'Funny' },
-        { id: 'together', name: 'Together' }
-      ],
+      quickTags: [],
       isTyping: false,
       isRecording: false,
       recordingTime: 0,
       recordingTimer: null,
       voiceRecorded: false,
-      recordedDuration: 0
+      recordedDuration: 0,
+      // 标签相关
+      showTagInput: false,
+      newTagName: '',
+      editingTagId: null
     }
   },
   computed: {
@@ -209,12 +233,90 @@ export default {
   },
   watch: {
     visible(val) {
-      if (val && this.canPublish()) {
-        // 自动保存逻辑可在此添加
+      if (val) {
+        this.loadTags()
+        this.editingTagId = null
       }
     }
   },
   methods: {
+    // 加载标签
+    async loadTags() {
+      try {
+        const res = await getTags()
+        if (res.data) {
+          this.quickTags = res.data.map(tag => ({
+            id: tag.id,
+            name: tag.name
+          }))
+        }
+      } catch (error) {
+        console.error('加载标签失败:', error)
+      }
+    },
+
+    // 显示添加标签输入框
+    showAddTagInput() {
+      this.showTagInput = true
+      this.newTagName = ''
+    },
+
+    // 隐藏添加标签输入框
+    hideAddTagInput() {
+      this.showTagInput = false
+      this.newTagName = ''
+    },
+
+    // 确认添加标签
+    async confirmAddTag() {
+      const name = this.newTagName.trim()
+      if (!name) {
+        uni.showToast({ title: '请输入标签名称', icon: 'none' })
+        return
+      }
+
+      // 检查重复
+      if (this.quickTags.some(t => t.name === name)) {
+        uni.showToast({ title: '标签已存在', icon: 'none' })
+        return
+      }
+
+      try {
+        const res = await createTag({ name })
+        if (res.data) {
+          this.quickTags.push({
+            id: res.data.id,
+            name: res.data.name
+          })
+          this.hideAddTagInput()
+          uni.showToast({ title: '添加成功', icon: 'success' })
+        }
+      } catch (error) {
+        console.error('添加标签失败:', error)
+      }
+    },
+
+    // 长按显示删除按钮
+    showDeleteTag(tag) {
+      // #ifdef MP-WEIXIN
+      uni.vibrateShort({ type: 'medium' })
+      // #endif
+      this.editingTagId = this.editingTagId === tag.id ? null : tag.id
+    },
+
+    // 删除标签
+    async deleteTag(tagId) {
+      try {
+        await deleteTagApi(tagId)
+        this.quickTags = this.quickTags.filter(t => t.id !== tagId)
+        this.selectedTags = this.selectedTags.filter(id => id !== tagId)
+        this.editingTagId = null
+        uni.showToast({ title: '已删除', icon: 'success' })
+      } catch (error) {
+        console.error('删除标签失败:', error)
+      }
+    },
+
     handleClose() {
       this.$emit('close')
       this.resetForm()
@@ -232,6 +334,12 @@ export default {
       // #endif
     },
     toggleTag(tagId) {
+      // 如果正在编辑模式，点击不切换选中状态
+      if (this.editingTagId === tagId) {
+        this.editingTagId = null
+        return
+      }
+
       const index = this.selectedTags.indexOf(tagId)
       if (index > -1) {
         this.selectedTags.splice(index, 1)
@@ -331,6 +439,9 @@ export default {
       this.isRecording = false
       this.voiceRecorded = false
       this.recordedDuration = 0
+      this.showTagInput = false
+      this.newTagName = ''
+      this.editingTagId = null
     }
   }
 }
@@ -467,6 +578,11 @@ export default {
   .type-icon-wrapper.active & {
     color: #E07A5F;
   }
+}
+
+.type-icon-img {
+  width: 48rpx;
+  height: 48rpx;
 }
 
 .type-label {
@@ -664,6 +780,11 @@ export default {
   justify-content: center;
 }
 
+.voice-icon-img {
+  width: 48rpx;
+  height: 48rpx;
+}
+
 .voice-hint {
   margin-top: 24rpx;
   font-size: 28rpx;
@@ -719,11 +840,113 @@ export default {
   font-size: 26rpx;
   color: #9E8F7D;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  position: relative;
 
   &.selected {
     background-color: rgba(224, 122, 95, 0.1);
     border-color: #E07A5F;
     color: #E07A5F;
+  }
+}
+
+.tag-text {
+  font-size: 26rpx;
+}
+
+.tag-delete {
+  margin-left: 8rpx;
+  width: 32rpx;
+  height: 32rpx;
+  background-color: #E07A5F;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFCF8;
+  font-size: 24rpx;
+  line-height: 1;
+}
+
+.add-tag-btn {
+  border-style: dashed;
+  padding: 12rpx 20rpx;
+}
+
+.add-tag-icon {
+  font-size: 32rpx;
+  color: #C4B8A8;
+}
+
+// 标签输入弹窗
+.tag-input-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(92, 79, 66, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+}
+
+.tag-input-content {
+  min-width: 520rpx;
+  background-color: #FFFCF8;
+  border-radius: 24rpx;
+  padding: 40rpx;
+  box-shadow: 0 8rpx 32rpx rgba(92, 79, 66, 0.2);
+}
+
+.tag-input-title {
+  display: block;
+  font-size: 32rpx;
+  color: #5C4F42;
+  font-weight: 500;
+  margin-bottom: 32rpx;
+  text-align: center;
+}
+
+.tag-input {
+  width: 90%;
+  height: 80rpx;
+  background-color: #FAF7F2;
+  border-radius: 12rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  color: #5C4F42;
+}
+
+.tag-input-placeholder {
+  color: #C4B8A8;
+}
+
+.tag-input-actions {
+  display: flex;
+  gap: 24rpx;
+  margin-top: 32rpx;
+}
+
+.tag-action-btn {
+  flex: 1;
+  height: 72rpx;
+  border-radius: 36rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+
+  &.cancel {
+    background-color: #FAF7F2;
+    color: #9E8F7D;
+  }
+
+  &.confirm {
+    background-color: #E07A5F;
+    color: #FFFCF8;
   }
 }
 

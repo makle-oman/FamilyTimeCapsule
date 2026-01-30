@@ -15,19 +15,7 @@ export default {
   },
   methods: {
     initAppData() {
-      // 检查是否有本地存储的家庭数据
-      const familyData = uni.getStorageSync('familyData')
-      if (!familyData) {
-        // 初始化默认家庭数据
-        const defaultData = {
-          familyName: '温馨小窝',
-          members: [],
-          memories: [],
-          letters: [],
-          createdAt: Date.now()
-        }
-        uni.setStorageSync('familyData', defaultData)
-      }
+      // 数据现在由后端管理，这里不再初始化本地假数据
     },
     initFontSettings() {
       // 读取存储的字体设置

@@ -296,6 +296,7 @@
 import TabBar from '@/components/tab-bar/tab-bar.vue'
 import RecordModal from '@/components/record-modal/record-modal.vue'
 import FamilyNameModal from '@/components/family-name-modal/family-name-modal.vue'
+import { getMyFamily, getFamilyStats, updateFamily } from '@/utils/api.js'
 
 export default {
   components: {
@@ -315,21 +316,19 @@ export default {
       currentFont: 'system',
       fontClass: 'font-system',
       familyInfo: {
-        name: '温馨小窝',
+        name: '',
         slogan: '记录每一个温柔的瞬间',
         coverImage: '',
-        createdDate: '2024年1月'
+        createdDate: ''
       },
-      familyMembers: [
-        { id: '1', name: '爸爸', role: '家庭支柱', avatar: '', online: true },
-        { id: '2', name: '妈妈', role: '温暖港湾', avatar: '', online: true },
-        { id: '3', name: '我', role: '快乐源泉', avatar: '', online: true }
-      ],
+      familyId: '',
+      inviteCode: '',
+      familyMembers: [],
       stats: {
-        memoriesCount: 127,
-        parallelCount: 43,
-        resonanceCount: 256,
-        lettersCount: 12
+        memoriesCount: 0,
+        parallelCount: 0,
+        resonanceCount: 0,
+        lettersCount: 0
       },
       fontList: [
         { id: 'system', name: '系统默认', value: 'system', class: 'font-system' },
@@ -375,10 +374,46 @@ export default {
     this.loadFamilyInfo()
   },
   methods: {
-    loadFamilyInfo() {
-      const familyData = uni.getStorageSync('familyData')
-      if (familyData && familyData.familyName) {
-        this.familyInfo.name = familyData.familyName
+    async loadFamilyInfo() {
+      try {
+        const res = await getMyFamily();
+        if (res.data) {
+          this.familyInfo.name = res.data.name || '';
+          this.familyInfo.slogan = res.data.slogan || '记录每一个温柔的瞬间';
+          this.familyInfo.coverImage = res.data.coverImage || '';
+          this.familyInfo.createdDate = res.data.establishedYear ? res.data.establishedYear + '年' : '';
+          this.familyId = res.data.id;
+          this.inviteCode = res.data.inviteCode;
+          this.familyMembers = (res.data.members || []).map(m => ({
+            id: m.id,
+            name: m.nickname,
+            role: '',
+            avatar: m.avatar || '',
+            online: true
+          }));
+
+          // 加载统计数据
+          if (res.data.id) {
+            this.loadFamilyStats(res.data.id);
+          }
+        }
+      } catch (error) {
+        console.error('加载家庭信息失败:', error);
+      }
+    },
+    async loadFamilyStats(familyId) {
+      try {
+        const res = await getFamilyStats(familyId);
+        if (res.data) {
+          this.stats = {
+            memoriesCount: res.data.memoriesCount || 0,
+            parallelCount: res.data.parallelMoments || 0,
+            resonanceCount: res.data.resonanceCount || 0,
+            lettersCount: res.data.lettersCount || 0
+          };
+        }
+      } catch (error) {
+        console.error('加载统计数据失败:', error);
       }
     },
     openEditFamilyName() {
@@ -387,17 +422,20 @@ export default {
     closeFamilyNameModal() {
       this.showFamilyNameModal = false
     },
-    saveFamilyName(name) {
-      this.familyInfo.name = name
-      const familyData = uni.getStorageSync('familyData') || {}
-      familyData.familyName = name
-      uni.setStorageSync('familyData', familyData)
-
-      this.showFamilyNameModal = false
-      uni.showToast({
-        title: '已保存',
-        icon: 'success'
-      })
+    async saveFamilyName(name) {
+      try {
+        if (this.familyId) {
+          await updateFamily(this.familyId, { name });
+        }
+        this.familyInfo.name = name;
+        this.showFamilyNameModal = false;
+        uni.showToast({
+          title: '已保存',
+          icon: 'success'
+        });
+      } catch (error) {
+        console.error('保存家庭名称失败:', error);
+      }
     },
     handleLogout() {
       uni.showModal({
@@ -406,9 +444,10 @@ export default {
         confirmColor: '#5C4F42',
         success: (res) => {
           if (res.confirm) {
-            // 清除登录信息
+            // 清除登录信息和旧的本地数据
             uni.removeStorageSync('token')
             uni.removeStorageSync('userInfo')
+            uni.removeStorageSync('familyData')
 
             uni.showToast({
               title: '已退出登录',
