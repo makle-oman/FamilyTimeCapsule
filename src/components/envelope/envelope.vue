@@ -59,9 +59,17 @@ export default {
   },
   computed: {
     canOpen() {
+      // 优先使用后端返回的 canOpen，否则根据时间计算
+      if (typeof this.letter.canOpen === 'boolean') {
+        return this.letter.canOpen
+      }
       return this.letter.unlockTime <= Date.now()
     },
     daysLeft() {
+      // 优先使用后端返回的 daysUntilUnlock
+      if (typeof this.letter.daysUntilUnlock === 'number') {
+        return this.letter.daysUntilUnlock
+      }
       const diff = this.letter.unlockTime - Date.now()
       return Math.max(0, Math.ceil(diff / (24 * 60 * 60 * 1000)))
     },

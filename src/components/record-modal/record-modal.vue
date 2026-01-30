@@ -131,8 +131,8 @@
 
           <!-- 录音结果 -->
           <view v-if="voiceRecorded" class="voice-result">
-            <view class="voice-play" @tap="playRecordedVoice">
-              <text>▶</text>
+            <view class="voice-play" :class="{ playing: isPlaying }" @tap="playRecordedVoice">
+              <text>{{ isPlaying ? '⏸' : '▶' }}</text>
             </view>
             <text class="voice-duration">{{ recordedDuration }}"</text>
             <view class="voice-delete" @tap="deleteVoice">Re-record</view>
@@ -151,7 +151,7 @@
           @tap="toggleTag(tag.id)"
           @longpress="showDeleteTag(tag)"
         >
-          <text class="tag-text">#{{ tag.name }}</text>
+          <text class="tag-text">{{ tag.name }}</text>
           <view v-if="editingTagId === tag.id" class="tag-delete" @tap.stop="deleteTag(tag.id)">×</view>
         </view>
 
@@ -220,6 +220,10 @@ export default {
       recordingTimer: null,
       voiceRecorded: false,
       recordedDuration: 0,
+      voiceTempFilePath: '', // 录音文件临时路径
+      recorderManager: null, // 录音管理器
+      innerAudioContext: null, // 音频播放器
+      isPlaying: false, // 是否正在播放
       // 标签相关
       showTagInput: false,
       newTagName: '',
@@ -236,10 +240,60 @@ export default {
       if (val) {
         this.loadTags()
         this.editingTagId = null
+        this.initRecorder()
+      } else {
+        this.destroyAudio()
       }
     }
   },
+  mounted() {
+    this.initRecorder()
+  },
+  beforeDestroy() {
+    this.destroyAudio()
+    if (this.recordingTimer) {
+      clearInterval(this.recordingTimer)
+    }
+  },
   methods: {
+    // 初始化录音管理器
+    initRecorder() {
+      if (this.recorderManager) return
+
+      this.recorderManager = uni.getRecorderManager()
+
+      // 监听录音结束
+      this.recorderManager.onStop((res) => {
+        console.log('录音结束:', res)
+        if (res.tempFilePath && this.recordingTime >= 1) {
+          this.voiceTempFilePath = res.tempFilePath
+          this.voiceRecorded = true
+          this.recordedDuration = this.recordingTime
+        }
+      })
+
+      // 监听录音错误
+      this.recorderManager.onError((err) => {
+        console.error('录音错误:', err)
+        this.isRecording = false
+        clearInterval(this.recordingTimer)
+        uni.showToast({
+          title: '录音失败，请检查权限',
+          icon: 'none'
+        })
+      })
+    },
+
+    // 销毁音频播放器
+    destroyAudio() {
+      if (this.innerAudioContext) {
+        this.innerAudioContext.stop()
+        this.innerAudioContext.destroy()
+        this.innerAudioContext = null
+      }
+      this.isPlaying = false
+    },
+
     // 加载标签
     async loadTags() {
       try {
@@ -366,10 +420,35 @@ export default {
     removeImage(index) {
       this.selectedImages.splice(index, 1)
     },
-    startRecording() {
+    startRecording(e) {
+      // 阻止事件冒泡，防止触发其他元素
+      if (e) e.stopPropagation()
+
+      // 先授权录音权限
+      uni.authorize({
+        scope: 'scope.record',
+        success: () => {
+          this.doStartRecording()
+        },
+        fail: () => {
+          uni.showModal({
+            title: '需要录音权限',
+            content: '请在设置中允许录音权限',
+            confirmText: '去设置',
+            success: (res) => {
+              if (res.confirm) {
+                uni.openSetting()
+              }
+            }
+          })
+        }
+      })
+    },
+    doStartRecording() {
       this.isRecording = true
       this.recordingTime = 0
       this.voiceRecorded = false
+      this.voiceTempFilePath = ''
 
       // #ifdef MP-WEIXIN
       uni.vibrateShort({ type: 'heavy' })
@@ -382,31 +461,68 @@ export default {
         }
       }, 1000)
 
-      const recorderManager = uni.getRecorderManager()
-      recorderManager.start({
+      // 确保录音管理器已初始化
+      if (!this.recorderManager) {
+        this.initRecorder()
+      }
+
+      this.recorderManager.start({
         duration: 60000,
-        format: 'mp3'
+        format: 'mp3',
+        sampleRate: 44100,
+        numberOfChannels: 1,
+        encodeBitRate: 128000
       })
     },
-    stopRecording() {
+    stopRecording(e) {
+      // 阻止事件冒泡
+      if (e) e.stopPropagation()
+
       if (!this.isRecording) return
       this.isRecording = false
       clearInterval(this.recordingTimer)
 
-      if (this.recordingTime >= 1) {
-        this.voiceRecorded = true
-        this.recordedDuration = this.recordingTime
+      if (this.recorderManager) {
+        this.recorderManager.stop()
       }
-
-      const recorderManager = uni.getRecorderManager()
-      recorderManager.stop()
     },
     playRecordedVoice() {
-      // TODO: 播放录制的语音
+      if (!this.voiceTempFilePath) {
+        uni.showToast({ title: '没有录音文件', icon: 'none' })
+        return
+      }
+
+      // 如果正在播放，则停止
+      if (this.isPlaying) {
+        this.destroyAudio()
+        return
+      }
+
+      // 创建音频播放器
+      this.innerAudioContext = uni.createInnerAudioContext()
+      this.innerAudioContext.src = this.voiceTempFilePath
+
+      this.innerAudioContext.onPlay(() => {
+        this.isPlaying = true
+      })
+
+      this.innerAudioContext.onEnded(() => {
+        this.isPlaying = false
+      })
+
+      this.innerAudioContext.onError((err) => {
+        console.error('播放错误:', err)
+        this.isPlaying = false
+        uni.showToast({ title: '播放失败', icon: 'none' })
+      })
+
+      this.innerAudioContext.play()
     },
     deleteVoice() {
+      this.destroyAudio()
       this.voiceRecorded = false
       this.recordedDuration = 0
+      this.voiceTempFilePath = ''
     },
     submitRecord() {
       if (!this.canPublish()) return
@@ -420,6 +536,7 @@ export default {
           return tag ? tag.name : id
         }),
         voiceDuration: this.recordedDuration,
+        voiceFilePath: this.voiceTempFilePath, // 添加录音文件路径
         createTime: Date.now()
       }
 
@@ -439,9 +556,11 @@ export default {
       this.isRecording = false
       this.voiceRecorded = false
       this.recordedDuration = 0
+      this.voiceTempFilePath = ''
       this.showTagInput = false
       this.newTagName = ''
       this.editingTagId = null
+      this.destroyAudio()
     }
   }
 }
@@ -810,6 +929,17 @@ export default {
   justify-content: center;
   color: #FFFCF8;
   font-size: 20rpx;
+  transition: all 0.3s ease;
+
+  &.playing {
+    background-color: #D4654A;
+    animation: pulse 1s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
 }
 
 .voice-duration {

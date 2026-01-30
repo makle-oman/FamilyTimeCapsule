@@ -22,7 +22,7 @@
             v-for="letter in pendingLetters"
             :key="letter.id"
             :letter="letter"
-            @open="openLetter"
+            @open="handleOpenLetter"
           />
         </view>
 
@@ -236,11 +236,59 @@
         </view>
       </view>
     </view>
+
+    <!-- 问答回答弹窗 -->
+    <view v-if="showAnswerPopup" class="answer-popup" @tap.self="closeAnswerPopup">
+      <view class="answer-content" @tap.stop>
+        <view class="answer-header">
+          <text class="answer-title">回答问题</text>
+          <view class="answer-close" @tap="closeAnswerPopup">×</view>
+        </view>
+
+        <view class="answer-body">
+          <view class="question-display">
+            <text class="question-label">今日问题</text>
+            <text class="question-content">{{ currentQuestion?.question }}</text>
+          </view>
+
+          <view class="answer-input-area">
+            <textarea
+              v-model="answerContent"
+              class="answer-textarea"
+              placeholder="写下你的答案..."
+              placeholder-class="textarea-placeholder"
+              :maxlength="500"
+            />
+          </view>
+
+          <view class="answer-hint">
+            <text>回答后需等待所有家人回答才能查看答案</text>
+          </view>
+        </view>
+
+        <view class="answer-footer">
+          <view class="submit-answer-btn" @tap="submitAnswer">
+            <text class="submit-answer-text">提交答案</text>
+          </view>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
 <script>
 import { formatDate, generateId } from '@/utils/index.js'
+import {
+  getPendingLetters,
+  getOpenedLetters,
+  getLetterYears,
+  createLetter,
+  openLetter,
+  getTodayQuestion,
+  answerQuestion,
+  getQuestionHistory,
+  getMyFamily
+} from '@/utils/api.js'
 import TabBar from '@/components/tab-bar/tab-bar.vue'
 import RecordModal from '@/components/record-modal/record-modal.vue'
 import EnvelopeCard from '@/components/envelope/envelope.vue'
@@ -257,34 +305,26 @@ export default {
       showRecordModal: false,
       showLetterPopup: false,
       showWritePopup: false,
+      showAnswerPopup: false,
       isOpening: false,
       letterOpened: false,
       currentLetter: null,
+      currentQuestion: null,
+      answerContent: '',
       pendingLetters: [],
       archivedLetters: [],
+      yearsList: [],
       questionList: [],
-      hasNewQuestion: true,
+      hasNewQuestion: false,
       fontClass: 'font-system',
-      familyMembers: [
-        { id: '1', name: '爸爸', avatar: '' },
-        { id: '2', name: '妈妈', avatar: '' },
-        { id: '3', name: '我', avatar: '' },
-        { id: 'all', name: '全家', avatar: '' }
-      ],
-      selectedReceiver: 'all',
+      familyMembers: [],
+      selectedReceiver: '',
       deliveryDate: '',
-      letterContent: ''
+      letterContent: '',
+      loading: false
     }
   },
   computed: {
-    yearsList() {
-      const years = new Set()
-      this.archivedLetters.forEach(letter => {
-        const year = new Date(letter.createTime).getFullYear()
-        years.add(year)
-      })
-      return Array.from(years).sort((a, b) => b - a)
-    },
     minDate() {
       const tomorrow = new Date()
       tomorrow.setDate(tomorrow.getDate() + 1)
@@ -305,128 +345,243 @@ export default {
     this.fontClass = uni.getStorageSync('fontClass') || 'font-system'
   },
   methods: {
-    loadData() {
-      // 模拟待开启的信
-      this.pendingLetters = [
-        {
-          id: generateId(),
-          senderName: '妈妈',
-          senderAvatar: '',
-          content: '亲爱的宝贝，当你打开这封信的时候，又长大了一岁。妈妈希望你永远健康快乐...',
-          createTime: Date.now() - 30 * 24 * 60 * 60 * 1000,
-          unlockTime: Date.now() + 7 * 24 * 60 * 60 * 1000
-        },
-        {
-          id: generateId(),
-          senderName: '爸爸',
-          senderAvatar: '',
-          content: '儿子，爸爸给你写的第一封信...',
-          createTime: Date.now() - 60 * 24 * 60 * 60 * 1000,
-          unlockTime: Date.now() - 1000 // 可以打开了
-        }
-      ]
-
-      // 模拟默契问答
-      this.questionList = [
-        {
-          id: generateId(),
-          question: '如果可以回到过去，你最想重温的一天是？',
-          members: [
-            { id: '1', name: '爸爸', avatar: '', answered: true },
-            { id: '2', name: '妈妈', avatar: '', answered: true },
-            { id: '3', name: '我', avatar: '', answered: true }
-          ],
-          allAnswered: true,
-          showBloom: false,
-          answers: [
-            { avatar: '', content: '孩子出生的那天' },
-            { avatar: '', content: '我们结婚的日子' },
-            { avatar: '', content: '去年生日那天' }
-          ]
-        },
-        {
-          id: generateId(),
-          question: '最近最让你感到幸福的小事是什么？',
-          members: [
-            { id: '1', name: '爸爸', avatar: '', answered: true },
-            { id: '2', name: '妈妈', avatar: '', answered: false },
-            { id: '3', name: '我', avatar: '', answered: true }
-          ],
-          allAnswered: false,
-          answers: []
-        }
-      ]
-
-      // 模拟已封存的信
-      this.archivedLetters = [
-        {
-          id: generateId(),
-          year: 2024,
-          createTime: Date.now() - 365 * 24 * 60 * 60 * 1000
-        },
-        {
-          id: generateId(),
-          year: 2023,
-          createTime: Date.now() - 2 * 365 * 24 * 60 * 60 * 1000
-        }
-      ]
-    },
-    getYearCount(year) {
-      return this.archivedLetters.filter(l => new Date(l.createTime).getFullYear() === year).length
-    },
-    openLetter(letter) {
-      this.currentLetter = {
-        ...letter,
-        formattedDate: formatDate(letter.createTime, 'YYYY年MM月DD日')
+    async loadData() {
+      this.loading = true
+      try {
+        await Promise.all([
+          this.loadPendingLetters(),
+          this.loadLetterYears(),
+          this.loadTodayQuestion(),
+          this.loadFamilyMembers()
+        ])
+      } catch (error) {
+        console.error('加载数据失败:', error)
+      } finally {
+        this.loading = false
       }
-      this.showLetterPopup = true
-      this.isOpening = true
-
-      // 播放开启动画
-      setTimeout(() => {
-        this.letterOpened = true
-      }, 1500)
     },
+
+    async loadFamilyMembers() {
+      try {
+        const res = await getMyFamily()
+        if (res.data && res.data.members) {
+          this.familyMembers = res.data.members.map(m => ({
+            id: m.id,
+            name: m.nickname,
+            avatar: m.avatar || ''
+          }))
+          // 默认选择第一个家庭成员
+          if (this.familyMembers.length > 0) {
+            this.selectedReceiver = this.familyMembers[0].id
+          }
+        }
+      } catch (error) {
+        console.error('加载家庭成员失败:', error)
+      }
+    },
+
+    async loadPendingLetters() {
+      try {
+        const res = await getPendingLetters()
+        if (res.data) {
+          this.pendingLetters = res.data.map(letter => ({
+            id: letter.id,
+            senderName: letter.sender?.nickname || '未知',
+            senderAvatar: letter.sender?.avatar || '',
+            content: letter.content,
+            createTime: new Date(letter.createdAt).getTime(),
+            unlockTime: new Date(letter.unlockTime).getTime(),
+            canOpen: letter.canOpen,
+            daysUntilUnlock: letter.daysUntilUnlock
+          }))
+        }
+      } catch (error) {
+        console.error('加载待开启信件失败:', error)
+      }
+    },
+
+    async loadLetterYears() {
+      try {
+        const res = await getLetterYears()
+        if (res.data) {
+          this.yearsList = res.data
+        }
+      } catch (error) {
+        console.error('加载信件年份失败:', error)
+      }
+    },
+
+    async loadTodayQuestion() {
+      try {
+        const res = await getTodayQuestion()
+        if (res.data) {
+          const q = res.data
+          // 检查是否有新问题未回答
+          this.hasNewQuestion = !q.hasAnswered
+
+          // 构建问答列表（当前只显示今日问题，后续可加载历史）
+          this.questionList = [{
+            id: q.id,
+            question: q.content,
+            members: q.answeredUsers?.map(u => ({
+              id: u.id,
+              name: u.nickname,
+              avatar: u.avatar || '',
+              answered: true
+            })) || [],
+            allAnswered: q.allAnswered,
+            showBloom: false,
+            answers: q.allAnswered ? q.answers?.map(a => ({
+              avatar: a.user?.avatar || '',
+              content: a.content,
+              userName: a.user?.nickname || ''
+            })) : [],
+            hasAnswered: q.hasAnswered,
+            totalMembers: q.totalMembers,
+            answeredCount: q.answeredCount
+          }]
+        }
+      } catch (error) {
+        console.error('加载今日问题失败:', error)
+      }
+    },
+
+    getYearCount(year) {
+      // 这里需要异步获取，暂时返回占位符
+      return '?'
+    },
+
+    async handleOpenLetter(letter) {
+      if (!letter.canOpen && letter.unlockTime > Date.now()) {
+        return
+      }
+
+      try {
+        // 调用后端打开信件
+        const res = await openLetter(letter.id)
+        if (res.data) {
+          this.currentLetter = {
+            ...letter,
+            content: res.data.content,
+            formattedDate: formatDate(letter.createTime, 'YYYY年MM月DD日')
+          }
+          this.showLetterPopup = true
+          this.isOpening = true
+
+          // 播放开启动画
+          setTimeout(() => {
+            this.letterOpened = true
+          }, 1500)
+
+          // 刷新信件列表
+          this.loadPendingLetters()
+          this.loadLetterYears()
+        }
+      } catch (error) {
+        console.error('打开信件失败:', error)
+      }
+    },
+
     closeLetterPopup() {
       this.showLetterPopup = false
       this.isOpening = false
       this.letterOpened = false
       this.currentLetter = null
     },
+
     openQA(qa) {
       if (qa.allAnswered) {
         // 显示开花动画
         qa.showBloom = true
+      } else if (!qa.hasAnswered) {
+        // 打开回答弹窗
+        this.currentQuestion = qa
+        this.answerContent = ''
+        this.showAnswerPopup = true
       } else {
-        // 跳转到回答页面
         uni.showToast({
-          title: '回答功能开发中',
+          title: '等待其他家人回答',
           icon: 'none'
         })
       }
     },
-    openYearLetters(year) {
-      uni.showToast({
-        title: `${year}年的信件`,
-        icon: 'none'
-      })
+
+    closeAnswerPopup() {
+      this.showAnswerPopup = false
+      this.currentQuestion = null
+      this.answerContent = ''
     },
+
+    async submitAnswer() {
+      if (!this.answerContent.trim()) {
+        uni.showToast({
+          title: '请输入你的答案',
+          icon: 'none'
+        })
+        return
+      }
+
+      try {
+        await answerQuestion(this.currentQuestion.id, this.answerContent.trim())
+        uni.showToast({
+          title: '回答成功',
+          icon: 'success'
+        })
+        this.closeAnswerPopup()
+        // 刷新问题
+        this.loadTodayQuestion()
+      } catch (error) {
+        console.error('回答失败:', error)
+      }
+    },
+
+    async openYearLetters(year) {
+      try {
+        const res = await getOpenedLetters(year)
+        if (res.data && res.data.length > 0) {
+          // TODO: 显示年度信件列表弹窗
+          uni.showToast({
+            title: `${year}年有 ${res.data.length} 封信`,
+            icon: 'none'
+          })
+        } else {
+          uni.showToast({
+            title: `${year}年暂无信件`,
+            icon: 'none'
+          })
+        }
+      } catch (error) {
+        console.error('加载年度信件失败:', error)
+      }
+    },
+
     writeLetter() {
+      if (this.familyMembers.length === 0) {
+        uni.showToast({
+          title: '请先加入一个家庭',
+          icon: 'none'
+        })
+        return
+      }
       this.showWritePopup = true
     },
+
     closeWritePopup() {
       this.showWritePopup = false
       this.resetWriteForm()
     },
+
     resetWriteForm() {
-      this.selectedReceiver = 'all'
+      this.selectedReceiver = this.familyMembers.length > 0 ? this.familyMembers[0].id : ''
       this.deliveryDate = ''
       this.letterContent = ''
     },
+
     onDateChange(e) {
       this.deliveryDate = e.detail.value
     },
-    sealLetter() {
+
+    async sealLetter() {
       if (!this.letterContent.trim()) {
         uni.showToast({
           title: '请写下你想说的话',
@@ -443,31 +598,42 @@ export default {
         return
       }
 
-      // 创建新信件
-      const newLetter = {
-        id: generateId(),
-        senderName: '我',
-        senderAvatar: '',
-        receiverId: this.selectedReceiver,
-        content: this.letterContent,
-        createTime: Date.now(),
-        unlockTime: new Date(this.deliveryDate).getTime()
+      if (!this.selectedReceiver) {
+        uni.showToast({
+          title: '请选择收件人',
+          icon: 'none'
+        })
+        return
       }
 
-      this.pendingLetters.unshift(newLetter)
-      this.closeWritePopup()
+      try {
+        await createLetter({
+          content: this.letterContent.trim(),
+          receiverId: this.selectedReceiver,
+          unlockTime: new Date(this.deliveryDate + 'T00:00:00').toISOString()
+        })
 
-      uni.showToast({
-        title: '信已封存',
-        icon: 'success'
-      })
+        this.closeWritePopup()
+        uni.showToast({
+          title: '信已封存',
+          icon: 'success'
+        })
+
+        // 刷新信件列表
+        this.loadPendingLetters()
+      } catch (error) {
+        console.error('封存信件失败:', error)
+      }
     },
+
     openRecord() {
       this.showRecordModal = true
     },
+
     closeRecord() {
       this.showRecordModal = false
     },
+
     submitRecord(data) {
       console.log('提交记录', data)
     }
@@ -1113,6 +1279,130 @@ export default {
 }
 
 .seal-text {
+  font-size: 32rpx;
+  color: #FFFCF8;
+  font-weight: 500;
+}
+
+// 问答回答弹窗
+.answer-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(230, 222, 212, 0.9);
+  backdrop-filter: blur(10rpx);
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.answer-content {
+  width: 90%;
+  max-width: 640rpx;
+  background-color: #FFFCF8;
+  border-radius: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 8rpx 32rpx rgba(92, 79, 66, 0.2);
+}
+
+.answer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32rpx;
+  border-bottom: 1rpx solid #E8E4DF;
+}
+
+.answer-title {
+  font-size: 34rpx;
+  color: #5C4F42;
+  font-weight: 500;
+}
+
+.answer-close {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44rpx;
+  color: #9E8F7D;
+}
+
+.answer-body {
+  padding: 32rpx;
+}
+
+.question-display {
+  margin-bottom: 32rpx;
+}
+
+.question-label {
+  display: block;
+  font-size: 24rpx;
+  color: #9E8F7D;
+  margin-bottom: 12rpx;
+}
+
+.question-content {
+  display: block;
+  font-size: 32rpx;
+  color: #5C4F42;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.answer-input-area {
+  background-color: #FAF7F2;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  min-height: 200rpx;
+}
+
+.answer-textarea {
+  width: 100%;
+  min-height: 160rpx;
+  font-size: 30rpx;
+  color: #5C4F42;
+  line-height: 1.7;
+  background: transparent;
+}
+
+.answer-hint {
+  margin-top: 16rpx;
+  text-align: center;
+
+  text {
+    font-size: 24rpx;
+    color: #C4B8A8;
+  }
+}
+
+.answer-footer {
+  padding: 16rpx 32rpx 32rpx;
+}
+
+.submit-answer-btn {
+  width: 100%;
+  height: 88rpx;
+  background: linear-gradient(135deg, #8A9A5B 0%, #7A8A4B 100%);
+  border-radius: 44rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(138, 154, 91, 0.3);
+  transition: all 0.3s ease;
+
+  &:active {
+    transform: scale(0.98);
+    box-shadow: 0 4rpx 16rpx rgba(138, 154, 91, 0.3);
+  }
+}
+
+.submit-answer-text {
   font-size: 32rpx;
   color: #FFFCF8;
   font-weight: 500;

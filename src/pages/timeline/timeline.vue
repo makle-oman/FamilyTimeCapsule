@@ -436,11 +436,15 @@ export default {
     },
     async handleResonance(memoryId) {
       try {
-        await addResonance(memoryId);
+        const res = await addResonance(memoryId);
         // 更新本地计数
         const memory = this.memories.find(m => m.id === memoryId);
         if (memory) {
-          memory.resonanceCount = (memory.resonanceCount || 0) + 1;
+          if (res.data?.action === 'removed') {
+            memory.resonanceCount = Math.max(0, (memory.resonanceCount || 0) - 1);
+          } else {
+            memory.resonanceCount = (memory.resonanceCount || 0) + 1;
+          }
         }
       } catch (error) {
         console.error('共鸣失败:', error);

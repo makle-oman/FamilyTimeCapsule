@@ -48,7 +48,17 @@
       "postcss": true,
       "minified": true
     },
-    "usingComponents": true
+    "usingComponents": true,
+    "requiredPrivateInfos": ["chooseImage", "chooseVideo"],
+    "permission": {
+      "scope.record": {
+        "desc": "用于录制语音记录"
+      },
+      "scope.camera": {
+        "desc": "用于拍摄照片和视频"
+      }
+    },
+    "__usePrivacyCheck__": true
   },
   "mp-alipay": {
     "usingComponents": true

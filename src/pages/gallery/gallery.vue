@@ -214,6 +214,7 @@
 
 <script>
 import { formatDate, generateId } from '@/utils/index.js'
+import { getPhotos, getPhotoTags } from '@/utils/api.js'
 import TabBar from '@/components/tab-bar/tab-bar.vue'
 import RecordModal from '@/components/record-modal/record-modal.vue'
 
@@ -234,17 +235,14 @@ export default {
       currentPhoto: null,
       selectedPhotos: [],
       photos: [],
+      allPhotos: [],
       leftColumnHeight: 0,
       rightColumnHeight: 0,
       fontClass: 'font-system',
+      pageNo: 1,
+      hasMore: true,
       smartTags: [
-        { id: 'all', name: '全部', icon: '📷', count: 0 },
-        { id: 'smile', name: '笑脸', icon: '😊', count: 0 },
-        { id: 'food', name: '美食', icon: '🍜', count: 0 },
-        { id: 'outdoor', name: '户外', icon: '🌳', count: 0 },
-        { id: 'family', name: '全家福', icon: '👨‍👩‍👧', count: 0 },
-        { id: 'pet', name: '萌宠', icon: '🐱', count: 0 },
-        { id: 'anniversary', name: '纪念日', icon: '🎂', count: 0 }
+        { id: 'all', name: '全部', icon: '📷', count: 0 }
       ]
     }
   },
@@ -264,120 +262,104 @@ export default {
     this.fontClass = uni.getStorageSync('fontClass') || 'font-system'
 
     this.loadPhotos()
+    this.loadTags()
   },
   onShow() {
     // 每次显示页面时刷新字体设置
     this.fontClass = uni.getStorageSync('fontClass') || 'font-system'
   },
   methods: {
-    loadPhotos() {
+    async loadPhotos() {
+      if (this.loading) return
       this.loading = true
 
-      // 模拟照片数据
-      setTimeout(() => {
-        const mockPhotos = [
-          {
-            id: generateId(),
-            url: 'https://picsum.photos/400/500?random=1',
-            content: '今天的晚餐超级丰盛，全家人一起吃火锅，热热闹闹的感觉真好',
-            authorName: '妈妈',
-            authorAvatar: '',
-            createTime: Date.now() - 1000 * 60 * 60 * 2,
-            displayHeight: 400,
-            aiTags: ['美食', '晚餐'],
-            memoryId: 'memory_001'
-          },
-          {
-            id: generateId(),
-            url: 'https://picsum.photos/400/300?random=2',
-            content: '周末去公园散步，阳光正好',
-            authorName: '爸爸',
-            authorAvatar: '',
-            createTime: Date.now() - 1000 * 60 * 60 * 24,
-            displayHeight: 300,
-            aiTags: ['户外', '笑脸'],
-            memoryId: 'memory_002'
-          },
-          {
-            id: generateId(),
-            url: 'https://picsum.photos/400/450?random=3',
-            content: '小猫咪今天特别粘人',
-            authorName: '我',
-            authorAvatar: '',
-            createTime: Date.now() - 1000 * 60 * 60 * 48,
-            displayHeight: 450,
-            aiTags: ['萌宠'],
-            memoryId: 'memory_003'
-          },
-          {
-            id: generateId(),
-            url: 'https://picsum.photos/400/350?random=4',
-            content: '生日快乐！又长大一岁了',
-            authorName: '妈妈',
-            authorAvatar: '',
-            createTime: Date.now() - 1000 * 60 * 60 * 72,
-            displayHeight: 350,
-            aiTags: ['纪念日', '笑脸'],
-            memoryId: 'memory_004'
-          },
-          {
-            id: generateId(),
-            url: 'https://picsum.photos/400/500?random=5',
-            content: '全家福，记录这幸福的时刻',
-            authorName: '爸爸',
-            authorAvatar: '',
-            createTime: Date.now() - 1000 * 60 * 60 * 24 * 7,
-            displayHeight: 500,
-            aiTags: ['全家福', '笑脸'],
-            memoryId: 'memory_005'
-          },
-          {
-            id: generateId(),
-            url: 'https://picsum.photos/400/380?random=6',
-            content: '自己做的蛋糕，虽然丑但好吃',
-            authorName: '我',
-            authorAvatar: '',
-            createTime: Date.now() - 1000 * 60 * 60 * 24 * 10,
-            displayHeight: 380,
-            aiTags: ['美食'],
-            memoryId: 'memory_006'
+      try {
+        const params = { page: this.pageNo, limit: 20 }
+        if (this.activeTag !== 'all') {
+          params.tag = this.activeTag
+        }
+
+        const res = await getPhotos(params)
+
+        if (res.data && res.data.items) {
+          const newPhotos = res.data.items.map(p => ({
+            id: p.id,
+            url: p.url,
+            content: p.content || '',
+            authorName: p.authorName || '未知',
+            authorAvatar: p.authorAvatar || '',
+            createTime: new Date(p.createdAt).getTime(),
+            dateText: formatDate(new Date(p.createdAt).getTime(), 'YYYY年MM月DD日'),
+            displayHeight: 300 + Math.floor(Math.random() * 200),
+            aiTags: p.tags || [],
+            memoryId: p.memoryId
+          }))
+
+          if (this.pageNo === 1) {
+            this.photos = newPhotos
+            this.allPhotos = newPhotos
+          } else {
+            this.photos = [...this.photos, ...newPhotos]
+            this.allPhotos = [...this.allPhotos, ...newPhotos]
           }
-        ]
 
-        // 添加日期文本
-        mockPhotos.forEach(photo => {
-          photo.dateText = formatDate(photo.createTime, 'YYYY年MM月DD日')
-        })
-
-        this.photos = [...this.photos, ...mockPhotos]
-        this.updateTagCounts()
+          this.hasMore = res.data.page < res.data.totalPages
+          this.pageNo++
+          this.updateTagCounts()
+        }
+      } catch (error) {
+        console.error('加载照片失败:', error)
+      } finally {
         this.loading = false
-      }, 800)
+      }
+    },
+    async loadTags() {
+      try {
+        const res = await getPhotoTags()
+        if (res.data && Array.isArray(res.data)) {
+          // 保留"全部"标签，追加从后端获取的标签
+          const dynamicTags = res.data.map(tag => ({
+            id: tag,
+            name: tag,
+            icon: this.getTagIcon(tag),
+            count: 0
+          }))
+          this.smartTags = [
+            { id: 'all', name: '全部', icon: '📷', count: 0 },
+            ...dynamicTags
+          ]
+          this.updateTagCounts()
+        }
+      } catch (error) {
+        console.error('加载标签失败:', error)
+      }
+    },
+    getTagIcon(tagName) {
+      const iconMap = {
+        '笑脸': '😊', '美食': '🍜', '户外': '🌳',
+        '全家福': '👨‍👩‍👧', '萌宠': '🐱', '纪念日': '🎂',
+        '旅行': '✈️', '运动': '⚽', '学习': '📚'
+      }
+      return iconMap[tagName] || '🏷'
     },
     updateTagCounts() {
-      // 更新标签计数
-      this.smartTags[0].count = this.photos.length
-
-      const tagMap = {
-        smile: '笑脸',
-        food: '美食',
-        outdoor: '户外',
-        family: '全家福',
-        pet: '萌宠',
-        anniversary: '纪念日'
-      }
+      this.smartTags[0].count = this.allPhotos.length
 
       this.smartTags.forEach(tag => {
         if (tag.id !== 'all') {
-          tag.count = this.photos.filter(p =>
-            p.aiTags && p.aiTags.includes(tagMap[tag.id])
+          tag.count = this.allPhotos.filter(p =>
+            p.aiTags && p.aiTags.includes(tag.id)
           ).length
         }
       })
     },
     filterByTag(tagId) {
       this.activeTag = tagId
-      // 实际项目中这里应该过滤照片列表
+      // 重新加载数据
+      this.pageNo = 1
+      this.hasMore = true
+      this.photos = []
+      this.loadPhotos()
     },
     truncateText(text, maxLength) {
       if (!text) return ''
@@ -452,7 +434,7 @@ export default {
       })
     },
     loadMore() {
-      if (this.loading) return
+      if (this.loading || !this.hasMore) return
       this.loadPhotos()
     },
     openRecord() {

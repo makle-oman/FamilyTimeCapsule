@@ -6,6 +6,20 @@
 const BASE_URL = 'http://localhost:1314/api';
 
 /**
+ * 将对象转换为查询字符串（兼容小程序环境）
+ */
+function buildQueryString(params) {
+  if (!params || typeof params !== 'object') return '';
+  const pairs = [];
+  for (const key in params) {
+    if (Object.prototype.hasOwnProperty.call(params, key) && params[key] !== undefined && params[key] !== null && params[key] !== '') {
+      pairs.push(encodeURIComponent(key) + '=' + encodeURIComponent(params[key]));
+    }
+  }
+  return pairs.join('&');
+}
+
+/**
  * 统一请求方法
  */
 export function request(options) {
@@ -189,7 +203,7 @@ export function createMemory(data) {
  * 获取记忆列表
  */
 export function getMemories(params = {}) {
-  const query = new URLSearchParams(params).toString();
+  const query = buildQueryString(params);
   return request({
     url: `/memories${query ? '?' + query : ''}`,
     method: 'GET',
@@ -257,7 +271,7 @@ export function removeResonance(memoryId, parallelViewId = null) {
  * 获取相册照片
  */
 export function getPhotos(params = {}) {
-  const query = new URLSearchParams(params).toString();
+  const query = buildQueryString(params);
   return request({
     url: `/photos${query ? '?' + query : ''}`,
     method: 'GET',
@@ -320,6 +334,16 @@ export function getOpenedLetters(year = null) {
   });
 }
 
+/**
+ * 获取信件年份列表
+ */
+export function getLetterYears() {
+  return request({
+    url: '/letters/years',
+    method: 'GET',
+  });
+}
+
 // ============================================================
 // 问答相关 API
 // ============================================================
@@ -342,6 +366,17 @@ export function answerQuestion(questionId, content) {
     url: '/questions/answer',
     method: 'POST',
     data: { questionId, content },
+  });
+}
+
+/**
+ * 获取问答历史
+ */
+export function getQuestionHistory(params = {}) {
+  const query = buildQueryString(params);
+  return request({
+    url: `/questions/history${query ? '?' + query : ''}`,
+    method: 'GET',
   });
 }
 
