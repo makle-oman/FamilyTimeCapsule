@@ -1,4 +1,6 @@
 <script>
+import { getCurrentThemeId, applyTheme } from '@/utils/themes.js'
+
 export default {
   onLaunch: function() {
     console.log('App Launch')
@@ -6,6 +8,8 @@ export default {
     this.initAppData()
     // 初始化字体设置
     this.initFontSettings()
+    // 初始化主题
+    this.initTheme()
   },
   onShow: function() {
     console.log('App Show')
@@ -24,27 +28,30 @@ export default {
         this.globalData.currentFont = savedFont
       }
     },
+    initTheme() {
+      // 读取存储的主题设置
+      const themeId = getCurrentThemeId()
+      const { theme, cssVars } = applyTheme(themeId)
+      this.globalData.currentTheme = themeId
+      this.globalData.themeCssVars = cssVars
+    },
     // 全局方法：设置字体
     setGlobalFont(fontValue) {
       this.globalData.currentFont = fontValue
       uni.setStorageSync('fontFamily', fontValue)
+    },
+    // 全局方法：设置主题
+    setGlobalTheme(themeId) {
+      const { theme, cssVars } = applyTheme(themeId)
+      this.globalData.currentTheme = themeId
+      this.globalData.themeCssVars = cssVars
+      return { theme, cssVars }
     }
   },
   globalData: {
-    // 全局配色
-    colors: {
-      primary: '#FAF7F2',      // 米白主背景
-      cardBg: '#FFFCF8',       // 暖白卡片底色
-      milkCoffee: '#C4B8A8',   // 奶咖色
-      warmGray: '#9E8F7D',     // 暖灰
-      sunsetOrange: '#E07A5F', // 落日橙
-      deepOrange: '#D4654A',   // 深橙
-      mossGreen: '#8A9A5B',    // 苔藓绿
-      darkBrown: '#5C4F42',    // 深褐
-      warmWhite: '#F5F1ED',    // 暖灰背景
-      lineColor: '#E8E4DF',    // 边框色
-      paperBg: '#FAF7F2'       // 信纸背景
-    },
+    // 当前主题
+    currentTheme: 'default',
+    themeCssVars: '',
     // 当前字体
     currentFont: 'system',
     // 音效开关
@@ -56,13 +63,45 @@ export default {
 </script>
 
 <style>
-/* 全局样式重置 */
+/* 全局主题变量 */
 page {
-  background-color: #FAF7F2;
+  /* 主色调 */
+  --color-primary: #E07A5F;
+  --color-primary-dark: #C96B52;
+  --color-primary-light: rgba(224, 122, 95, 0.1);
+  /* 辅助色 */
+  --color-secondary: #8A9A5B;
+  --color-secondary-light: rgba(138, 154, 91, 0.1);
+  /* 背景色 */
+  --color-background: #FFFCF8;
+  --color-background-secondary: #FAF7F2;
+  /* 文字色 */
+  --color-text: #5C4F42;
+  --color-text-secondary: #9E8F7D;
+  --color-text-light: #C4B8A8;
+  /* 边框色 */
+  --color-border: #E8E4DF;
+  --color-border-light: #F0EBE5;
+  /* 遮罩 */
+  --color-overlay: rgba(92, 79, 66, 0.5);
+  --color-overlay-light: rgba(230, 222, 212, 0.6);
+
+  background-color: var(--color-background-secondary);
   font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  color: #5C4F42;
+  color: var(--color-text);
   font-size: 16px;
   line-height: 1.6;
+}
+
+/* 主题过渡动画 */
+.theme-transition,
+.theme-transition view,
+.theme-transition text,
+.theme-transition image,
+.theme-transition button,
+.theme-transition input,
+.theme-transition textarea {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* 全局字体样式类 - 使用手机系统支持的字体 */
@@ -180,11 +219,11 @@ page {
 
 /* 禁用纯黑纯白 */
 .text-dark {
-  color: #5C4F42 !important;
+  color: var(--color-text) !important;
 }
 
 .text-light {
-  color: #FAF7F2 !important;
+  color: var(--color-background) !important;
 }
 
 /* 安全区域适配 */
@@ -206,7 +245,7 @@ page {
 /* 页面容器 */
 .page-container {
   min-height: 100vh;
-  background-color: #FAF7F2;
+  background-color: var(--color-background-secondary);
   padding-bottom: 180rpx;
 }
 

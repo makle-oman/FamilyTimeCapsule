@@ -1,0 +1,43 @@
+/**
+ * 全局主题变量
+ * 所有组件应使用这些 CSS 变量而非硬编码颜色
+ */
+
+/* 默认主题变量（暖阳） */
+page {
+  /* 主色调 */
+  --color-primary: #E07A5F;
+  --color-primary-dark: #C96B52;
+  --color-primary-light: rgba(224, 122, 95, 0.1);
+
+  /* 辅助色 */
+  --color-secondary: #8A9A5B;
+  --color-secondary-light: rgba(138, 154, 91, 0.1);
+
+  /* 背景色 */
+  --color-background: #FFFCF8;
+  --color-background-secondary: #FAF7F2;
+
+  /* 文字色 */
+  --color-text: #5C4F42;
+  --color-text-secondary: #9E8F7D;
+  --color-text-light: #C4B8A8;
+
+  /* 边框色 */
+  --color-border: #E8E4DF;
+  --color-border-light: #F0EBE5;
+
+  /* 遮罩 */
+  --color-overlay: rgba(92, 79, 66, 0.5);
+  --color-overlay-light: rgba(230, 222, 212, 0.6);
+}
+
+/* 渐变色（基于主色） */
+.gradient-primary {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+}
+
+/* 主题过渡动画 */
+.theme-transition {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}

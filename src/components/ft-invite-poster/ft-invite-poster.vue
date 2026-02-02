@@ -45,7 +45,7 @@
             <!-- 二维码占位（未来可以生成） -->
             <view class="qrcode-placeholder">
               <text class="qr-icon">📱</text>
-              <text class="qr-hint">打开「家的时光」App</text>
+              <text class="qr-hint">打开「家的时光」小程序</text>
               <text class="qr-hint">输入邀请码加入家庭</text>
             </view>
 
@@ -61,11 +61,11 @@
       <!-- 操作按钮 -->
       <view class="poster-actions">
         <view class="action-btn copy-btn" @tap="copyInviteCode">
-          <text class="action-icon">📋</text>
+          <text class="action-icon"></text>
           <text class="action-text">复制邀请码</text>
         </view>
         <view class="action-btn save-btn" @tap="savePoster">
-          <text class="action-icon">💾</text>
+          <text class="action-icon"></text>
           <text class="action-text">保存海报</text>
         </view>
       </view>

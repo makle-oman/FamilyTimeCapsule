@@ -1,5 +1,5 @@
 <template>
-  <view class="page-wrapper profile-page" :class="fontClass">
+  <view class="page-wrapper profile-page" :class="[fontClass, themeClass]" :style="themeStyle">
     <!-- 状态栏占位 -->
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
@@ -174,6 +174,15 @@
           <text class="feature-arrow">›</text>
         </view>
 
+        <view class="feature-item" @tap="openSettings('theme')" v-if="false">
+          <view class="feature-icon theme-icon"><text>🎨</text></view>
+          <view class="feature-content">
+            <text class="feature-title">主题设置</text>
+            <text class="feature-desc">{{ currentThemeName }}</text>
+          </view>
+          <text class="feature-arrow">›</text>
+        </view>
+
         <view class="feature-item">
           <view class="feature-icon sound-icon"><text>♪</text></view>
           <view class="feature-content">
@@ -207,7 +216,7 @@
           <text class="feature-arrow">›</text>
         </view>
 
-        <view class="feature-item logout-item" @tap="handleLogout">
+        <view class="feature-item " @tap="handleLogout">
           <view class="feature-icon logout-icon"><text>↪</text></view>
           <view class="feature-content">
             <text class="feature-title">退出登录</text>
@@ -297,6 +306,44 @@
       :family-info="{ name: familyInfo.name, inviteCode: inviteCode }"
       @close="closeInvitePoster"
     />
+
+    <!-- 主题设置弹窗 -->
+    <view v-if="showThemeSettings" class="settings-popup" @tap.stop="closeThemeSettings">
+      <view class="settings-content theme-content" @tap.stop>
+        <view class="settings-header">
+          <text class="settings-title">主题设置</text>
+          <view class="settings-close" @tap="closeThemeSettings">×</view>
+        </view>
+
+        <scroll-view scroll-y class="settings-body">
+          <view class="theme-preview">
+            <view class="preview-card" :style="themePreviewStyle">
+              <text class="preview-title">预览效果</text>
+              <text class="preview-text">家是最温暖的港湾</text>
+            </view>
+          </view>
+
+          <view class="theme-options">
+            <view
+              v-for="theme in themeList"
+              :key="theme.id"
+              class="theme-option"
+              :class="{ selected: currentTheme === theme.id }"
+              @tap="selectTheme(theme.id)"
+            >
+              <view class="theme-color-preview" :style="{ backgroundColor: theme.colors.primary }">
+                <text class="theme-icon">{{ theme.icon }}</text>
+              </view>
+              <view class="theme-info">
+                <text class="theme-name">{{ theme.name }}</text>
+                <text class="theme-desc">{{ theme.description }}</text>
+              </view>
+              <view v-if="currentTheme === theme.id" class="theme-check">✓</view>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+    </view>
 
     <!-- 关于我们弹窗 -->
     <view v-if="showAboutPopup" class="settings-popup" @tap.stop="closeAboutPopup">
@@ -444,6 +491,51 @@
         </scroll-view>
       </view>
     </view>
+
+    <!-- 成员信息弹窗 -->
+    <view v-if="showMemberPopup" class="settings-popup" @tap.stop="closeMemberPopup">
+      <view class="settings-content member-content" @tap.stop>
+        <view class="settings-header">
+          <text class="settings-title">成员信息</text>
+          <view class="settings-close" @tap="closeMemberPopup">×</view>
+        </view>
+
+        <view class="member-profile" v-if="currentMember">
+          <view class="member-profile-avatar">
+            <view
+              v-if="currentMember.avatarInfo && currentMember.avatarInfo.type === 'default'"
+              class="profile-avatar-default"
+              :style="{ backgroundColor: currentMember.avatarInfo.color }"
+            >
+              <text class="profile-avatar-emoji">{{ currentMember.avatarInfo.emoji }}</text>
+            </view>
+            <image
+              v-else
+              :src="currentMember.avatar || '/static/images/default-avatar.png'"
+              mode="aspectFill"
+              class="profile-avatar-img"
+            />
+          </view>
+
+          <text class="member-profile-name">{{ currentMember.name }}</text>
+          <view v-if="currentMember.online" class="member-online-status">
+            <view class="online-dot"></view>
+            <text class="online-text">在线</text>
+          </view>
+
+          <view class="member-info-list">
+            <view class="member-info-row">
+              <text class="info-label">角色</text>
+              <text class="info-value">{{ currentMember.role || '家庭成员' }}</text>
+            </view>
+            <view class="member-info-row">
+              <text class="info-label">ID</text>
+              <text class="info-value">{{ currentMember.id }}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -452,6 +544,7 @@ import { ref, reactive, computed } from 'vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import { getMyFamily, getFamilyStats, updateFamily, getCurrentUser } from '@/utils/api.js'
 import { getAvatarInfo } from '@/utils/index.js'
+import { THEME_LIST, getTheme, applyTheme, getCurrentThemeId } from '@/utils/themes.js'
 
 const statusBarHeight = ref(20)
 const menuButtonTop = ref(0)
@@ -463,6 +556,11 @@ const showProfileSettings = ref(false)
 const showInvitePoster = ref(false)
 const showAboutPopup = ref(false)
 const showPrivacyPopup = ref(false)
+const showMemberPopup = ref(false)
+const currentMember = ref(null)
+const showThemeSettings = ref(false)
+const currentTheme = ref('default')
+const themeList = THEME_LIST
 const soundEnabled = ref(true)
 const currentFont = ref('system')
 const fontClass = ref('font-system')
@@ -516,11 +614,13 @@ onLoad(() => {
   soundEnabled.value = uni.getStorageSync('soundEnabled') !== false
   loadFontSettings()
   loadFamilyInfo()
+  initTheme()
 })
 
 onShow(() => {
   loadFontSettings()
   loadFamilyInfo()
+  initTheme()
 })
 
 const loadFamilyInfo = async () => {
@@ -623,7 +723,14 @@ const changeCover = () => {
 
 const inviteMember = () => { showInvitePoster.value = true }
 const closeInvitePoster = () => { showInvitePoster.value = false }
-const viewMember = (member) => { uni.showToast({ title: `查看 ${member.name} 的资料`, icon: 'none' }) }
+const viewMember = (member) => {
+  currentMember.value = member
+  showMemberPopup.value = true
+}
+const closeMemberPopup = () => {
+  showMemberPopup.value = false
+  currentMember.value = null
+}
 const generateBook = () => { uni.showToast({ title: '纪念册功能开发中', icon: 'none' }) }
 
 const openProfileSettings = async () => {
@@ -665,12 +772,76 @@ const openSettings = (type) => {
     showAboutPopup.value = true
   } else if (type === 'privacy') {
     showPrivacyPopup.value = true
+  } else if (type === 'theme') {
+    showThemeSettings.value = true
   } else {
     uni.showToast({ title: `${type} 设置开发中`, icon: 'none' })
   }
 }
 
 const closeFontSettings = () => { showFontSettings.value = false }
+
+const closeThemeSettings = () => { showThemeSettings.value = false }
+
+// 当前主题名称
+const currentThemeName = computed(() => {
+  const theme = getTheme(currentTheme.value)
+  return `当前: ${theme.name}`
+})
+
+// 主题 class
+const themeClass = computed(() => `theme-${currentTheme.value}`)
+
+// 主题内联样式（用于动态更新 CSS 变量）
+const themeStyle = computed(() => {
+  const theme = getTheme(currentTheme.value)
+  const c = theme.colors
+  return {
+    '--color-primary': c.primary,
+    '--color-primary-dark': c.primaryDark,
+    '--color-primary-light': c.primaryLight,
+    '--color-secondary': c.secondary,
+    '--color-secondary-light': c.secondaryLight,
+    '--color-background': c.background,
+    '--color-background-secondary': c.backgroundSecondary,
+    '--color-text': c.text,
+    '--color-text-secondary': c.textSecondary,
+    '--color-text-light': c.textLight,
+    '--color-border': c.border,
+    '--color-border-light': c.borderLight,
+    '--color-overlay': c.overlay,
+    '--color-overlay-light': c.overlayLight
+  }
+})
+
+// 主题预览样式
+const themePreviewStyle = computed(() => {
+  const theme = getTheme(currentTheme.value)
+  return {
+    backgroundColor: theme.colors.backgroundSecondary,
+    color: theme.colors.text,
+    borderColor: theme.colors.border
+  }
+})
+
+// 选择主题
+const selectTheme = (themeId) => {
+  currentTheme.value = themeId
+  applyTheme(themeId)
+
+  // 通知全局更新
+  const app = getApp()
+  if (app && app.setGlobalTheme) {
+    app.setGlobalTheme(themeId)
+  }
+
+  uni.showToast({ title: '主题已切换', icon: 'success' })
+}
+
+// 初始化主题
+const initTheme = () => {
+  currentTheme.value = getCurrentThemeId()
+}
 
 const selectFont = (font) => {
   currentFont.value = font.value
