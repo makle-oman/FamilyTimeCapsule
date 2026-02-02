@@ -350,8 +350,10 @@ const handleResonance = async (memoryId) => {
     if (memory) {
       if (res.data?.action === 'removed') {
         memory.resonanceCount = Math.max(0, (memory.resonanceCount || 0) - 1)
+        uni.showToast({ title: '已取消共鸣', icon: 'none' })
       } else {
         memory.resonanceCount = (memory.resonanceCount || 0) + 1
+        uni.showToast({ title: '已共鸣', icon: 'none' })
       }
     }
   } catch (error) {

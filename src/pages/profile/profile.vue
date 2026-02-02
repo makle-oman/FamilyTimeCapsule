@@ -33,7 +33,21 @@
         <scroll-view scroll-x class="members-scroll">
           <view v-for="member in familyMembers" :key="member.id" class="member-item" @tap="viewMember(member)">
             <view class="member-avatar-wrapper" :class="{ online: member.online }">
-              <image :src="member.avatar || '/static/images/default-avatar.png'" mode="aspectFill" class="member-avatar" />
+              <!-- 默认头像显示emoji -->
+              <view
+                v-if="member.avatarInfo && member.avatarInfo.type === 'default'"
+                class="member-avatar-default"
+                :style="{ backgroundColor: member.avatarInfo.color }"
+              >
+                <text class="avatar-emoji">{{ member.avatarInfo.emoji }}</text>
+              </view>
+              <!-- 自定义头像显示图片 -->
+              <image
+                v-else
+                :src="member.avatar || '/static/images/default-avatar.png'"
+                mode="aspectFill"
+                class="member-avatar"
+              />
               <view v-if="member.online" class="online-indicator"></view>
             </view>
             <text class="member-name">{{ member.name }}</text>
@@ -142,6 +156,15 @@
 
       <!-- 功能列表 -->
       <view class="feature-list">
+        <view class="feature-item" @tap="openProfileSettings">
+          <view class="feature-icon about-icon"><text>👤</text></view>
+          <view class="feature-content">
+            <text class="feature-title">个人设置</text>
+            <text class="feature-desc">修改昵称、更换头像</text>
+          </view>
+          <text class="feature-arrow">›</text>
+        </view>
+
         <view class="feature-item" @tap="openSettings('font')">
           <view class="feature-icon font-icon"><text>文</text></view>
           <view class="feature-content">
@@ -259,13 +282,29 @@
       @close="closeFamilyNameModal"
       @submit="saveFamilyName"
     />
+
+    <!-- 个人设置弹窗 -->
+    <ft-profile-settings
+      :visible="showProfileSettings"
+      :user-info="currentUserInfo"
+      @close="closeProfileSettings"
+      @updated="onProfileUpdated"
+    />
+
+    <!-- 邀请海报弹窗 -->
+    <ft-invite-poster
+      :visible="showInvitePoster"
+      :family-info="{ name: familyInfo.name, inviteCode: inviteCode }"
+      @close="closeInvitePoster"
+    />
   </view>
 </template>
 
 <script setup>
 import { ref, reactive, computed } from 'vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
-import { getMyFamily, getFamilyStats, updateFamily } from '@/utils/api.js'
+import { getMyFamily, getFamilyStats, updateFamily, getCurrentUser } from '@/utils/api.js'
+import { getAvatarInfo } from '@/utils/index.js'
 
 const statusBarHeight = ref(20)
 const menuButtonTop = ref(0)
@@ -273,6 +312,8 @@ const menuButtonHeight = ref(32)
 const showRecordModal = ref(false)
 const showFontSettings = ref(false)
 const showFamilyNameModal = ref(false)
+const showProfileSettings = ref(false)
+const showInvitePoster = ref(false)
 const soundEnabled = ref(true)
 const currentFont = ref('system')
 const fontClass = ref('font-system')
@@ -287,6 +328,11 @@ const familyInfo = reactive({
 })
 
 const familyMembers = ref([])
+
+const currentUserInfo = reactive({
+  nickname: '',
+  avatar: ''
+})
 
 const stats = reactive({
   memoriesCount: 0,
@@ -339,7 +385,8 @@ const loadFamilyInfo = async () => {
       familyId.value = res.data.id
       inviteCode.value = res.data.inviteCode
       familyMembers.value = (res.data.members || []).map(m => ({
-        id: m.id, name: m.nickname, role: '', avatar: m.avatar || '', online: true
+        id: m.id, name: m.nickname, role: '', avatar: m.avatar || '', online: true,
+        avatarInfo: getAvatarInfo(m.avatar)
       }))
 
       if (res.data.id) {
@@ -425,9 +472,42 @@ const changeCover = () => {
   })
 }
 
-const inviteMember = () => { uni.showToast({ title: '邀请功能开发中', icon: 'none' }) }
+const inviteMember = () => { showInvitePoster.value = true }
+const closeInvitePoster = () => { showInvitePoster.value = false }
 const viewMember = (member) => { uni.showToast({ title: `查看 ${member.name} 的资料`, icon: 'none' }) }
 const generateBook = () => { uni.showToast({ title: '纪念册功能开发中', icon: 'none' }) }
+
+const openProfileSettings = async () => {
+  // 先加载当前用户信息，再显示弹窗
+  await loadCurrentUser()
+  showProfileSettings.value = true
+}
+const closeProfileSettings = () => { showProfileSettings.value = false }
+
+const onProfileUpdated = (data) => {
+  // 更新本地存储
+  const userInfo = uni.getStorageSync('userInfo') || {}
+  if (data.nickname) userInfo.nickname = data.nickname
+  if (data.avatar) userInfo.avatar = data.avatar
+  uni.setStorageSync('userInfo', userInfo)
+  // 刷新成员列表
+  loadFamilyInfo()
+}
+
+const loadCurrentUser = async () => {
+  try {
+    const res = await getCurrentUser()
+    if (res.data) {
+      currentUserInfo.nickname = res.data.nickname || ''
+      currentUserInfo.avatar = res.data.avatar || ''
+    }
+  } catch (error) {
+    // 从本地存储读取
+    const userInfo = uni.getStorageSync('userInfo') || {}
+    currentUserInfo.nickname = userInfo.nickname || ''
+    currentUserInfo.avatar = userInfo.avatar || ''
+  }
+}
 
 const openSettings = (type) => {
   if (type === 'font') {

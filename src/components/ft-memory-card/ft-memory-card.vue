@@ -31,7 +31,17 @@
         <view class="card-header">
           <view class="author-info">
             <view class="avatar-wrapper" :class="{ online: currentView.online }">
+              <!-- 默认头像显示emoji -->
+              <view
+                v-if="getAvatarInfo(currentView.avatar).type === 'default'"
+                class="avatar-default"
+                :style="{ backgroundColor: getAvatarInfo(currentView.avatar).color }"
+              >
+                <text class="avatar-emoji">{{ getAvatarInfo(currentView.avatar).emoji }}</text>
+              </view>
+              <!-- 自定义头像显示图片 -->
               <image
+                v-else
                 class="avatar-img"
                 :src="currentView.avatar || '/static/images/default-avatar.png'"
                 mode="aspectFill"
@@ -119,7 +129,17 @@
       <view class="card-header">
         <view class="author-info">
           <view class="avatar-wrapper" :class="{ online: memory.authorOnline }">
+            <!-- 默认头像显示emoji -->
+            <view
+              v-if="getAvatarInfo(memory.authorAvatar).type === 'default'"
+              class="avatar-default"
+              :style="{ backgroundColor: getAvatarInfo(memory.authorAvatar).color }"
+            >
+              <text class="avatar-emoji">{{ getAvatarInfo(memory.authorAvatar).emoji }}</text>
+            </view>
+            <!-- 自定义头像显示图片 -->
             <image
+              v-else
               class="avatar-img"
               :src="memory.authorAvatar || '/static/images/default-avatar.png'"
               mode="aspectFill"
@@ -181,7 +201,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { formatRelativeTime } from '@/utils/index.js'
+import { formatRelativeTime, getAvatarInfo } from '@/utils/index.js'
 
 const props = defineProps({
   memory: {

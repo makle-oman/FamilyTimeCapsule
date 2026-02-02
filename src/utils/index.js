@@ -145,3 +145,30 @@ export function vibrate(type = 'light') {
   }
   // #endif
 }
+
+// 默认头像配置（8个可爱的emoji头像）
+export const DEFAULT_AVATARS = [
+  { id: 'default:1', emoji: '😊', color: '#FFD93D', name: '阳光' },
+  { id: 'default:2', emoji: '😎', color: '#6BCB77', name: '酷酷' },
+  { id: 'default:3', emoji: '🥰', color: '#FF6B6B', name: '甜甜' },
+  { id: 'default:4', emoji: '😸', color: '#4D96FF', name: '喵咪' },
+  { id: 'default:5', emoji: '🐻', color: '#9B59B6', name: '小熊' },
+  { id: 'default:6', emoji: '🌸', color: '#FF9FF3', name: '樱花' },
+  { id: 'default:7', emoji: '⭐', color: '#F39C12', name: '星星' },
+  { id: 'default:8', emoji: '🎀', color: '#E91E63', name: '蝴蝶结' },
+]
+
+// 获取头像信息
+export function getAvatarInfo(avatar) {
+  if (!avatar) {
+    return { type: 'default', ...DEFAULT_AVATARS[0] }
+  }
+
+  if (avatar.startsWith('default:')) {
+    const index = parseInt(avatar.split(':')[1]) - 1
+    const defaultAvatar = DEFAULT_AVATARS[index] || DEFAULT_AVATARS[0]
+    return { type: 'default', ...defaultAvatar }
+  }
+
+  return { type: 'custom', url: avatar }
+}

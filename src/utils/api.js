@@ -102,6 +102,16 @@ export function getCurrentUser() {
   });
 }
 
+/**
+ * 更新用户资料
+ */
+export function updateProfile(data) {
+  return request({
+    url: '/auth/update-profile',
+    data,
+  });
+}
+
 // ============================================================
 // 家庭相关 API
 // ============================================================

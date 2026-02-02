@@ -1,0 +1,299 @@
+.invite-poster-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(92, 79, 66, 0.6);
+  backdrop-filter: blur(10rpx);
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
+}
+
+.poster-content {
+  width: 100%;
+  max-width: 640rpx;
+  background-color: #FFFCF8;
+  border-radius: 32rpx;
+  overflow: hidden;
+  animation: scaleIn 0.3s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.poster-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 28rpx 32rpx;
+  border-bottom: 1rpx solid #E8E4DF;
+}
+
+.poster-title {
+  font-size: 34rpx;
+  color: #5C4F42;
+  font-weight: 600;
+}
+
+.poster-close {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #FAF7F2;
+  border-radius: 50%;
+
+  text {
+    font-size: 44rpx;
+    color: #9E8F7D;
+    line-height: 1;
+  }
+}
+
+// 海报预览
+.poster-preview {
+  padding: 32rpx;
+  display: flex;
+  justify-content: center;
+}
+
+.poster-card {
+  width: 100%;
+  max-width: 520rpx;
+  background: linear-gradient(165deg, #FAF7F2 0%, #FFF5EB 50%, #F5EFE6 100%);
+  border-radius: 24rpx;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12rpx 40rpx rgba(196, 184, 168, 0.3);
+}
+
+// 背景装饰
+.poster-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.bg-circle {
+  position: absolute;
+  border-radius: 50%;
+
+  &.circle-1 {
+    width: 200rpx;
+    height: 200rpx;
+    background: linear-gradient(135deg, rgba(224, 122, 95, 0.15) 0%, rgba(224, 122, 95, 0.05) 100%);
+    top: -60rpx;
+    right: -40rpx;
+  }
+
+  &.circle-2 {
+    width: 160rpx;
+    height: 160rpx;
+    background: linear-gradient(135deg, rgba(138, 154, 91, 0.15) 0%, rgba(138, 154, 91, 0.05) 100%);
+    bottom: -40rpx;
+    left: -30rpx;
+  }
+
+  &.circle-3 {
+    width: 100rpx;
+    height: 100rpx;
+    background: linear-gradient(135deg, rgba(196, 184, 168, 0.2) 0%, rgba(196, 184, 168, 0.05) 100%);
+    top: 40%;
+    left: 10%;
+  }
+}
+
+// 海报主体
+.poster-body {
+  position: relative;
+  z-index: 1;
+  padding: 40rpx 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.poster-decoration {
+  width: 88rpx;
+  height: 88rpx;
+  background-color: rgba(224, 122, 95, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20rpx;
+}
+
+.deco-emoji {
+  font-size: 48rpx;
+}
+
+.family-name {
+  font-size: 40rpx;
+  color: #5C4F42;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+}
+
+.invite-text {
+  font-size: 26rpx;
+  color: #9E8F7D;
+  margin-bottom: 32rpx;
+}
+
+// 邀请码区域
+.invite-code-section {
+  width: 100%;
+  background-color: rgba(255, 252, 248, 0.8);
+  border-radius: 20rpx;
+  padding: 24rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 2rpx dashed #E8E4DF;
+}
+
+.code-label {
+  font-size: 24rpx;
+  color: #9E8F7D;
+  margin-bottom: 16rpx;
+}
+
+.code-display {
+  display: flex;
+  gap: 12rpx;
+}
+
+.code-char {
+  width: 56rpx;
+  height: 64rpx;
+  background: linear-gradient(135deg, #FFFCF8 0%, #FAF7F2 100%);
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #E07A5F;
+  font-family: monospace;
+  box-shadow: 0 4rpx 12rpx rgba(196, 184, 168, 0.2);
+}
+
+// 二维码占位
+.qrcode-placeholder {
+  margin-top: 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.qr-icon {
+  font-size: 48rpx;
+  margin-bottom: 12rpx;
+}
+
+.qr-hint {
+  font-size: 22rpx;
+  color: #C4B8A8;
+  line-height: 1.6;
+}
+
+// 底部信息
+.poster-footer-info {
+  margin-top: 32rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.footer-text {
+  font-size: 22rpx;
+  color: #C4B8A8;
+  font-style: italic;
+}
+
+.footer-line {
+  width: 60rpx;
+  height: 4rpx;
+  background: linear-gradient(90deg, transparent, #E07A5F, transparent);
+  margin-top: 12rpx;
+  border-radius: 2rpx;
+}
+
+// 操作按钮
+.poster-actions {
+  display: flex;
+  gap: 24rpx;
+  padding: 0 32rpx;
+}
+
+.action-btn {
+  flex: 1;
+  height: 88rpx;
+  border-radius: 44rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+}
+
+.copy-btn {
+  background-color: #FAF7F2;
+  border: 2rpx solid #E8E4DF;
+}
+
+.save-btn {
+  background: linear-gradient(135deg, #E07A5F 0%, #C96B52 100%);
+  box-shadow: 0 8rpx 24rpx rgba(224, 122, 95, 0.3);
+}
+
+.action-icon {
+  font-size: 32rpx;
+}
+
+.action-text {
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+.copy-btn .action-text {
+  color: #5C4F42;
+}
+
+.save-btn .action-text {
+  color: #FFFCF8;
+}
+
+// 提示文字
+.poster-tip {
+  padding: 24rpx 32rpx 32rpx;
+  text-align: center;
+
+  text {
+    font-size: 24rpx;
+    color: #C4B8A8;
+  }
+}
+
+// Canvas隐藏
+.poster-canvas {
+  position: fixed;
+  left: -9999rpx;
+  top: -9999rpx;
+}
