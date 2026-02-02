@@ -1,26 +1,24 @@
 /**
  * API 请求封装
+ * 响应格式: { code: number, data: any, message: string }
+ * code = 200 表示成功，其他表示失败
  */
 
 // API 基础地址 - 根据环境配置
 const BASE_URL = 'http://localhost:1314/api';
 
-/**
- * 将对象转换为查询字符串（兼容小程序环境）
- */
-function buildQueryString(params) {
-  if (!params || typeof params !== 'object') return '';
-  const pairs = [];
-  for (const key in params) {
-    if (Object.prototype.hasOwnProperty.call(params, key) && params[key] !== undefined && params[key] !== null && params[key] !== '') {
-      pairs.push(encodeURIComponent(key) + '=' + encodeURIComponent(params[key]));
-    }
-  }
-  return pairs.join('&');
-}
+// 响应码
+const ResponseCode = {
+  SUCCESS: 200,
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  SERVER_ERROR: 500,
+};
 
 /**
- * 统一请求方法
+ * 统一请求方法 - 所有接口使用 POST
  */
 export function request(options) {
   return new Promise((resolve, reject) => {
@@ -28,33 +26,33 @@ export function request(options) {
 
     uni.request({
       url: BASE_URL + options.url,
-      method: options.method || 'GET',
-      data: options.data,
+      method: 'POST',
+      data: options.data || {},
       header: {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...options.header,
       },
       success: (res) => {
-        if (res.statusCode === 200 || res.statusCode === 201) {
-          if (res.data.success) {
+        if (res.statusCode === 200) {
+          if (res.data.code === ResponseCode.SUCCESS) {
             resolve(res.data);
+          } else if (res.data.code === ResponseCode.UNAUTHORIZED) {
+            // Token 过期，跳转登录
+            uni.removeStorageSync('token');
+            uni.removeStorageSync('userInfo');
+            uni.reLaunch({ url: '/pages/login/login' });
+            reject(res.data);
           } else {
             uni.showToast({
-              title: res.data.error || '请求失败',
+              title: res.data.message || '请求失败',
               icon: 'none',
             });
             reject(res.data);
           }
-        } else if (res.statusCode === 401) {
-          // Token 过期，跳转登录
-          uni.removeStorageSync('token');
-          uni.removeStorageSync('userInfo');
-          uni.reLaunch({ url: '/pages/login/login' });
-          reject(res.data);
         } else {
           uni.showToast({
-            title: res.data.error || '请求失败',
+            title: '请求失败',
             icon: 'none',
           });
           reject(res.data);
@@ -81,7 +79,6 @@ export function request(options) {
 export function login(data) {
   return request({
     url: '/auth/login',
-    method: 'POST',
     data,
   });
 }
@@ -92,7 +89,6 @@ export function login(data) {
 export function register(data) {
   return request({
     url: '/auth/register',
-    method: 'POST',
     data,
   });
 }
@@ -103,7 +99,6 @@ export function register(data) {
 export function getCurrentUser() {
   return request({
     url: '/auth/me',
-    method: 'GET',
   });
 }
 
@@ -116,8 +111,7 @@ export function getCurrentUser() {
  */
 export function createFamily(data) {
   return request({
-    url: '/families',
-    method: 'POST',
+    url: '/families/create',
     data,
   });
 }
@@ -128,7 +122,6 @@ export function createFamily(data) {
 export function joinFamily(inviteCode) {
   return request({
     url: '/families/join',
-    method: 'POST',
     data: { inviteCode },
   });
 }
@@ -139,7 +132,6 @@ export function joinFamily(inviteCode) {
 export function getMyFamily() {
   return request({
     url: '/families/my',
-    method: 'GET',
   });
 }
 
@@ -148,8 +140,8 @@ export function getMyFamily() {
  */
 export function getFamilyById(familyId) {
   return request({
-    url: `/families/${familyId}`,
-    method: 'GET',
+    url: '/families/detail',
+    data: { familyId },
   });
 }
 
@@ -158,9 +150,8 @@ export function getFamilyById(familyId) {
  */
 export function updateFamily(familyId, data) {
   return request({
-    url: `/families/${familyId}`,
-    method: 'PUT',
-    data,
+    url: '/families/update',
+    data: { familyId, ...data },
   });
 }
 
@@ -169,8 +160,8 @@ export function updateFamily(familyId, data) {
  */
 export function getFamilyMembers(familyId) {
   return request({
-    url: `/families/${familyId}/members`,
-    method: 'GET',
+    url: '/families/members',
+    data: { familyId },
   });
 }
 
@@ -179,8 +170,8 @@ export function getFamilyMembers(familyId) {
  */
 export function getFamilyStats(familyId) {
   return request({
-    url: `/families/${familyId}/stats`,
-    method: 'GET',
+    url: '/families/stats',
+    data: { familyId },
   });
 }
 
@@ -193,8 +184,7 @@ export function getFamilyStats(familyId) {
  */
 export function createMemory(data) {
   return request({
-    url: '/memories',
-    method: 'POST',
+    url: '/memories/create',
     data,
   });
 }
@@ -203,10 +193,9 @@ export function createMemory(data) {
  * 获取记忆列表
  */
 export function getMemories(params = {}) {
-  const query = buildQueryString(params);
   return request({
-    url: `/memories${query ? '?' + query : ''}`,
-    method: 'GET',
+    url: '/memories/list',
+    data: params,
   });
 }
 
@@ -215,8 +204,8 @@ export function getMemories(params = {}) {
  */
 export function getMemoryById(memoryId) {
   return request({
-    url: `/memories/${memoryId}`,
-    method: 'GET',
+    url: '/memories/detail',
+    data: { memoryId },
   });
 }
 
@@ -226,7 +215,6 @@ export function getMemoryById(memoryId) {
 export function getYearAgoMemories() {
   return request({
     url: '/memories/year-ago',
-    method: 'GET',
   });
 }
 
@@ -235,31 +223,18 @@ export function getYearAgoMemories() {
  */
 export function addParallelView(memoryId, data) {
   return request({
-    url: `/memories/${memoryId}/parallel-views`,
-    method: 'POST',
-    data,
+    url: '/memories/parallel-view',
+    data: { memoryId, ...data },
   });
 }
 
 /**
- * 添加共鸣
+ * 添加/取消共鸣 (toggle)
  */
 export function addResonance(memoryId, parallelViewId = null) {
   return request({
-    url: `/memories/${memoryId}/resonance`,
-    method: 'POST',
-    data: { parallelViewId },
-  });
-}
-
-/**
- * 取消共鸣
- */
-export function removeResonance(memoryId, parallelViewId = null) {
-  return request({
-    url: `/memories/${memoryId}/resonance`,
-    method: 'DELETE',
-    data: { parallelViewId },
+    url: '/memories/resonance',
+    data: { memoryId, parallelViewId },
   });
 }
 
@@ -271,10 +246,9 @@ export function removeResonance(memoryId, parallelViewId = null) {
  * 获取相册照片
  */
 export function getPhotos(params = {}) {
-  const query = buildQueryString(params);
   return request({
-    url: `/photos${query ? '?' + query : ''}`,
-    method: 'GET',
+    url: '/photos/list',
+    data: params,
   });
 }
 
@@ -284,7 +258,6 @@ export function getPhotos(params = {}) {
 export function getPhotoTags() {
   return request({
     url: '/photos/tags',
-    method: 'GET',
   });
 }
 
@@ -297,8 +270,7 @@ export function getPhotoTags() {
  */
 export function createLetter(data) {
   return request({
-    url: '/letters',
-    method: 'POST',
+    url: '/letters/create',
     data,
   });
 }
@@ -309,7 +281,6 @@ export function createLetter(data) {
 export function getPendingLetters() {
   return request({
     url: '/letters/pending',
-    method: 'GET',
   });
 }
 
@@ -318,8 +289,8 @@ export function getPendingLetters() {
  */
 export function openLetter(letterId) {
   return request({
-    url: `/letters/${letterId}/open`,
-    method: 'POST',
+    url: '/letters/open',
+    data: { letterId },
   });
 }
 
@@ -327,10 +298,9 @@ export function openLetter(letterId) {
  * 获取已打开的信件
  */
 export function getOpenedLetters(year = null) {
-  const query = year ? `?year=${year}` : '';
   return request({
-    url: `/letters/opened${query}`,
-    method: 'GET',
+    url: '/letters/opened',
+    data: year ? { year } : {},
   });
 }
 
@@ -340,7 +310,6 @@ export function getOpenedLetters(year = null) {
 export function getLetterYears() {
   return request({
     url: '/letters/years',
-    method: 'GET',
   });
 }
 
@@ -354,7 +323,6 @@ export function getLetterYears() {
 export function getTodayQuestion() {
   return request({
     url: '/questions/today',
-    method: 'GET',
   });
 }
 
@@ -364,7 +332,6 @@ export function getTodayQuestion() {
 export function answerQuestion(questionId, content) {
   return request({
     url: '/questions/answer',
-    method: 'POST',
     data: { questionId, content },
   });
 }
@@ -373,10 +340,9 @@ export function answerQuestion(questionId, content) {
  * 获取问答历史
  */
 export function getQuestionHistory(params = {}) {
-  const query = buildQueryString(params);
   return request({
-    url: `/questions/history${query ? '?' + query : ''}`,
-    method: 'GET',
+    url: '/questions/history',
+    data: params,
   });
 }
 
@@ -389,8 +355,7 @@ export function getQuestionHistory(params = {}) {
  */
 export function getTags() {
   return request({
-    url: '/tags',
-    method: 'GET',
+    url: '/tags/list',
   });
 }
 
@@ -399,8 +364,7 @@ export function getTags() {
  */
 export function createTag(data) {
   return request({
-    url: '/tags',
-    method: 'POST',
+    url: '/tags/create',
     data,
   });
 }
@@ -410,7 +374,7 @@ export function createTag(data) {
  */
 export function deleteTag(tagId) {
   return request({
-    url: `/tags/${tagId}`,
-    method: 'DELETE',
+    url: '/tags/delete',
+    data: { tagId },
   });
 }
