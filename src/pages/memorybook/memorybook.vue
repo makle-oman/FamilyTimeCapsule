@@ -35,126 +35,198 @@
 
         <!-- 翻页区域 -->
         <view class="book-pages-wrapper">
-          <!-- 封面 (第0页) -->
-          <view
-            v-if="currentPage === 0"
-            class="book-page cover-page"
-            :class="{ 'flip-left': flipDirection === 'left' }"
-          >
-            <view class="cover-content">
-              <view class="cover-decoration top"></view>
-              <text class="cover-title">{{ familyName }}</text>
-              <text class="cover-subtitle">家庭纪念册</text>
-              <view class="cover-year">{{ currentYear }}</view>
-              <view class="cover-decoration bottom"></view>
-              <text class="cover-hint">轻触翻页 →</text>
-            </view>
+          <!-- 底层：下一页（翻页时露出） -->
+          <view v-if="isFlipping && nextPageContent" class="book-page-layer under-page" :class="nextPageClass">
+            <!-- 渲染即将显示的页面内容 -->
+            <block v-if="nextPageContent.type === 'cover'">
+              <view class="cover-content">
+                <view class="cover-decoration top"></view>
+                <text class="cover-title">{{ familyName }}</text>
+                <text class="cover-subtitle">家庭纪念册</text>
+                <view class="cover-year">{{ currentYear }}</view>
+                <view class="cover-decoration bottom"></view>
+                <text class="cover-hint">轻触翻页 →</text>
+              </view>
+            </block>
+            <block v-else-if="nextPageContent.type === 'end'">
+              <view class="end-content">
+                <text class="end-title">未完待续...</text>
+                <text class="end-text">已记录 {{ totalMemories }} 个瞬间</text>
+                <view class="end-stats">
+                  <view class="stat-item">
+                    <text class="stat-value">{{ totalPages }}</text>
+                    <text class="stat-label">页</text>
+                  </view>
+                  <view class="stat-divider"></view>
+                  <view class="stat-item">
+                    <text class="stat-value">{{ chaptersCount }}</text>
+                    <text class="stat-label">章节</text>
+                  </view>
+                </view>
+                <text class="end-hint">← 轻触翻页</text>
+              </view>
+            </block>
+            <block v-else-if="nextPageContent.type === 'memory'">
+              <view class="page-left">
+                <view class="page-inner">
+                  <view class="page-date">
+                    <text class="date-text">{{ nextPageContent.data.dateText }}</text>
+                  </view>
+                  <view class="page-author">
+                    <view
+                      v-if="nextPageContent.data.avatarInfo && nextPageContent.data.avatarInfo.type === 'default'"
+                      class="author-avatar-default"
+                      :style="{ backgroundColor: nextPageContent.data.avatarInfo.color }"
+                    >
+                      <text class="avatar-emoji">{{ nextPageContent.data.avatarInfo.emoji }}</text>
+                    </view>
+                    <image
+                      v-else
+                      class="author-avatar"
+                      :src="nextPageContent.data.avatar || '/static/images/default-avatar.png'"
+                      mode="aspectFill"
+                    />
+                    <text class="author-name">{{ nextPageContent.data.authorName }}</text>
+                  </view>
+                  <view class="page-content">
+                    <text class="content-text">{{ nextPageContent.data.content || '...' }}</text>
+                  </view>
+                  <view v-if="nextPageContent.data.tags && nextPageContent.data.tags.length" class="page-tags">
+                    <text v-for="tag in nextPageContent.data.tags" :key="tag" class="page-tag">#{{ tag }}</text>
+                  </view>
+                  <view class="page-number left">
+                    <text>{{ nextPageContent.pageIndex * 2 - 1 }}</text>
+                  </view>
+                </view>
+              </view>
+              <view class="page-right">
+                <view class="page-inner">
+                  <view v-if="nextPageContent.data.images && nextPageContent.data.images.length" class="page-images">
+                    <image
+                      v-for="(img, idx) in nextPageContent.data.images.slice(0, 4)"
+                      :key="idx"
+                      class="page-image"
+                      :class="getImageClass(nextPageContent.data.images.length, idx)"
+                      :src="img"
+                      mode="aspectFill"
+                    />
+                  </view>
+                  <view v-else class="page-empty-image">
+                    <view class="empty-decoration">
+                      <view class="decoration-line"></view>
+                      <text class="decoration-text">记忆片段</text>
+                      <view class="decoration-line"></view>
+                    </view>
+                  </view>
+                  <view class="page-number right">
+                    <text>{{ nextPageContent.pageIndex * 2 }}</text>
+                  </view>
+                </view>
+              </view>
+            </block>
           </view>
 
-          <!-- 内容页 -->
+          <!-- 顶层：当前页（翻页时翻走） -->
           <view
-            v-else-if="currentPageData"
-            class="book-page content-page"
+            class="book-page-layer top-page"
             :class="[
-              { 'flip-left': flipDirection === 'left' },
-              { 'flip-right': flipDirection === 'right' }
+              currentPageClass,
+              { 'flip-out-left': isFlipping && flipDirection === 'left' },
+              { 'flip-out-right': isFlipping && flipDirection === 'right' }
             ]"
           >
-            <!-- 左页 -->
-            <view class="page-left">
-              <view class="page-inner">
-                <!-- 日期标题 -->
-                <view class="page-date">
-                  <text class="date-text">{{ currentPageData.dateText }}</text>
-                </view>
-
-                <!-- 作者信息 -->
-                <view class="page-author">
-                  <view
-                    v-if="currentPageData.avatarInfo && currentPageData.avatarInfo.type === 'default'"
-                    class="author-avatar-default"
-                    :style="{ backgroundColor: currentPageData.avatarInfo.color }"
-                  >
-                    <text class="avatar-emoji">{{ currentPageData.avatarInfo.emoji }}</text>
-                  </view>
-                  <image
-                    v-else
-                    class="author-avatar"
-                    :src="currentPageData.avatar || '/static/images/default-avatar.png'"
-                    mode="aspectFill"
-                  />
-                  <text class="author-name">{{ currentPageData.authorName }}</text>
-                </view>
-
-                <!-- 内容文字 -->
-                <view class="page-content">
-                  <text class="content-text">{{ currentPageData.content || '...' }}</text>
-                </view>
-
-                <!-- 标签 -->
-                <view v-if="currentPageData.tags && currentPageData.tags.length" class="page-tags">
-                  <text v-for="tag in currentPageData.tags" :key="tag" class="page-tag">#{{ tag }}</text>
-                </view>
-
-                <!-- 页码 -->
-                <view class="page-number left">
-                  <text>{{ currentPage * 2 - 1 }}</text>
-                </view>
+            <!-- 封面 -->
+            <block v-if="currentPage === 0">
+              <view class="cover-content">
+                <view class="cover-decoration top"></view>
+                <text class="cover-title">{{ familyName }}</text>
+                <text class="cover-subtitle">家庭纪念册</text>
+                <view class="cover-year">{{ currentYear }}</view>
+                <view class="cover-decoration bottom"></view>
+                <text class="cover-hint">轻触翻页 →</text>
               </view>
-            </view>
+            </block>
 
-            <!-- 右页 - 图片展示 -->
-            <view class="page-right">
-              <view class="page-inner">
-                <view v-if="currentPageData.images && currentPageData.images.length" class="page-images">
-                  <image
-                    v-for="(img, idx) in currentPageData.images.slice(0, 4)"
-                    :key="idx"
-                    class="page-image"
-                    :class="getImageClass(currentPageData.images.length, idx)"
-                    :src="img"
-                    mode="aspectFill"
-                    @tap="previewImage(currentPageData.images, idx)"
-                  />
-                </view>
-                <view v-else class="page-empty-image">
-                  <view class="empty-decoration">
-                    <view class="decoration-line"></view>
-                    <text class="decoration-text">记忆片段</text>
-                    <view class="decoration-line"></view>
+            <!-- 内容页 -->
+            <block v-else-if="currentPageData">
+              <view class="page-left">
+                <view class="page-inner">
+                  <view class="page-date">
+                    <text class="date-text">{{ currentPageData.dateText }}</text>
+                  </view>
+                  <view class="page-author">
+                    <view
+                      v-if="currentPageData.avatarInfo && currentPageData.avatarInfo.type === 'default'"
+                      class="author-avatar-default"
+                      :style="{ backgroundColor: currentPageData.avatarInfo.color }"
+                    >
+                      <text class="avatar-emoji">{{ currentPageData.avatarInfo.emoji }}</text>
+                    </view>
+                    <image
+                      v-else
+                      class="author-avatar"
+                      :src="currentPageData.avatar || '/static/images/default-avatar.png'"
+                      mode="aspectFill"
+                    />
+                    <text class="author-name">{{ currentPageData.authorName }}</text>
+                  </view>
+                  <view class="page-content">
+                    <text class="content-text">{{ currentPageData.content || '...' }}</text>
+                  </view>
+                  <view v-if="currentPageData.tags && currentPageData.tags.length" class="page-tags">
+                    <text v-for="tag in currentPageData.tags" :key="tag" class="page-tag">#{{ tag }}</text>
+                  </view>
+                  <view class="page-number left">
+                    <text>{{ currentPage * 2 - 1 }}</text>
                   </view>
                 </view>
-
-                <!-- 页码 -->
-                <view class="page-number right">
-                  <text>{{ currentPage * 2 }}</text>
+              </view>
+              <view class="page-right">
+                <view class="page-inner">
+                  <view v-if="currentPageData.images && currentPageData.images.length" class="page-images">
+                    <image
+                      v-for="(img, idx) in currentPageData.images.slice(0, 4)"
+                      :key="idx"
+                      class="page-image"
+                      :class="getImageClass(currentPageData.images.length, idx)"
+                      :src="img"
+                      mode="aspectFill"
+                      @tap="previewImage(currentPageData.images, idx)"
+                    />
+                  </view>
+                  <view v-else class="page-empty-image">
+                    <view class="empty-decoration">
+                      <view class="decoration-line"></view>
+                      <text class="decoration-text">记忆片段</text>
+                      <view class="decoration-line"></view>
+                    </view>
+                  </view>
+                  <view class="page-number right">
+                    <text>{{ currentPage * 2 }}</text>
+                  </view>
                 </view>
               </view>
-            </view>
-          </view>
+            </block>
 
-          <!-- 尾页 -->
-          <view
-            v-else-if="currentPage > totalPages"
-            class="book-page end-page"
-            :class="{ 'flip-right': flipDirection === 'right' }"
-          >
-            <view class="end-content">
-              <text class="end-title">未完待续...</text>
-              <text class="end-text">已记录 {{ totalMemories }} 个瞬间</text>
-              <view class="end-stats">
-                <view class="stat-item">
-                  <text class="stat-value">{{ totalPages }}</text>
-                  <text class="stat-label">页</text>
+            <!-- 尾页 -->
+            <block v-else-if="currentPage > totalPages">
+              <view class="end-content">
+                <text class="end-title">未完待续...</text>
+                <text class="end-text">已记录 {{ totalMemories }} 个瞬间</text>
+                <view class="end-stats">
+                  <view class="stat-item">
+                    <text class="stat-value">{{ totalPages }}</text>
+                    <text class="stat-label">页</text>
+                  </view>
+                  <view class="stat-divider"></view>
+                  <view class="stat-item">
+                    <text class="stat-value">{{ chaptersCount }}</text>
+                    <text class="stat-label">章节</text>
+                  </view>
                 </view>
-                <view class="stat-divider"></view>
-                <view class="stat-item">
-                  <text class="stat-value">{{ chaptersCount }}</text>
-                  <text class="stat-label">章节</text>
-                </view>
+                <text class="end-hint">← 轻触翻页</text>
               </view>
-              <text class="end-hint">← 轻触翻页</text>
-            </view>
+            </block>
           </view>
         </view>
 
@@ -229,6 +301,7 @@ const currentYear = computed(() => new Date().getFullYear())
 // 翻页相关
 const currentPage = ref(0) // 0 = 封面
 const flipDirection = ref('')
+const isFlipping = ref(false)
 const memories = ref([])
 const showChapterList = ref(false)
 
@@ -270,14 +343,26 @@ const chapters = computed(() => {
 
 const chaptersCount = computed(() => chapters.value.length)
 
-// 当前页数据
-const currentPageData = computed(() => {
-  if (currentPage.value === 0 || currentPage.value > totalPages.value) {
-    return null
-  }
-  const memory = memories.value[currentPage.value - 1]
-  if (!memory) return null
+// 当前页样式类
+const currentPageClass = computed(() => {
+  if (currentPage.value === 0) return 'cover-page'
+  if (currentPage.value > totalPages.value) return 'end-page'
+  return 'content-page'
+})
 
+// 下一页样式类
+const nextPageClass = computed(() => {
+  if (!nextPageContent.value) return ''
+  if (nextPageContent.value.type === 'cover') return 'cover-page'
+  if (nextPageContent.value.type === 'end') return 'end-page'
+  return 'content-page'
+})
+
+// 获取指定页码的数据
+const getPageData = (pageIndex) => {
+  if (pageIndex <= 0 || pageIndex > totalPages.value) return null
+  const memory = memories.value[pageIndex - 1]
+  if (!memory) return null
   return {
     id: memory.id,
     dateText: formatDate(memory.createdAt, 'YYYY年MM月DD日'),
@@ -288,6 +373,27 @@ const currentPageData = computed(() => {
     images: memory.images || [],
     tags: memory.tags || []
   }
+}
+
+// 翻页时下一页的内容
+const nextPageContent = computed(() => {
+  if (!isFlipping.value) return null
+
+  const targetPage = flipDirection.value === 'left'
+    ? currentPage.value + 1
+    : currentPage.value - 1
+
+  if (targetPage < 0) return null
+  if (targetPage === 0) return { type: 'cover' }
+  if (targetPage > totalPages.value) return { type: 'end' }
+
+  const data = getPageData(targetPage)
+  return data ? { type: 'memory', data, pageIndex: targetPage } : null
+})
+
+// 当前页数据
+const currentPageData = computed(() => {
+  return getPageData(currentPage.value)
 })
 
 // 进度百分比
@@ -341,31 +447,37 @@ const goBack = () => {
 }
 
 const prevPage = () => {
-  if (currentPage.value <= 0) return
+  if (currentPage.value <= 0 || isFlipping.value) return
 
+  isFlipping.value = true
   flipDirection.value = 'right'
-  setTimeout(() => {
-    currentPage.value--
-    flipDirection.value = ''
-  }, 300)
 
   // #ifdef MP-WEIXIN
   uni.vibrateShort({ type: 'light' })
   // #endif
+
+  setTimeout(() => {
+    currentPage.value--
+    isFlipping.value = false
+    flipDirection.value = ''
+  }, 600)
 }
 
 const nextPage = () => {
-  if (currentPage.value > totalPages.value) return
+  if (currentPage.value > totalPages.value || isFlipping.value) return
 
+  isFlipping.value = true
   flipDirection.value = 'left'
-  setTimeout(() => {
-    currentPage.value++
-    flipDirection.value = ''
-  }, 300)
 
   // #ifdef MP-WEIXIN
   uni.vibrateShort({ type: 'light' })
   // #endif
+
+  setTimeout(() => {
+    currentPage.value++
+    isFlipping.value = false
+    flipDirection.value = ''
+  }, 600)
 }
 
 const toggleChapterList = () => {
