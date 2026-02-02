@@ -43,6 +43,14 @@
         "navigationStyle": "custom",
         "backgroundColor": "#FAF7F2"
       }
+    },
+    {
+      "path": "pages/memorybook/memorybook",
+      "style": {
+        "navigationBarTitleText": "",
+        "navigationStyle": "custom",
+        "backgroundColor": "#F5F0E8"
+      }
     }
   ],
   "globalStyle": {

@@ -731,7 +731,11 @@ const closeMemberPopup = () => {
   showMemberPopup.value = false
   currentMember.value = null
 }
-const generateBook = () => { uni.showToast({ title: '纪念册功能开发中', icon: 'none' }) }
+const generateBook = () => {
+  uni.navigateTo({
+    url: '/pages/memorybook/memorybook'
+  })
+}
 
 const openProfileSettings = async () => {
   // 先加载当前用户信息，再显示弹窗
