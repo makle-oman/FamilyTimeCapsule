@@ -49,7 +49,6 @@
       "minified": true
     },
     "usingComponents": true,
-    "requiredPrivateInfos": ["chooseImage", "chooseVideo"],
     "permission": {
       "scope.record": {
         "desc": "用于录制语音记录"

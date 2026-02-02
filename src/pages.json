@@ -58,7 +58,7 @@
   "easycom": {
     "autoscan": true,
     "custom": {
-      "^custom-(.*)": "@/components/$1/$1.vue"
+      "^ft-(.*)": "@/components/$1/$1.vue"
     }
   }
 }
