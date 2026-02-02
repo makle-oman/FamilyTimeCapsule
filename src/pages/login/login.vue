@@ -163,7 +163,7 @@
                 <view class="dot"></view>
               </view>
             </view>
-            <text v-else class="btn-text">开启旅程  →</text>
+            <text v-else class="btn-text">开启旅程  </text>
           </view>
         </view>
       </view>

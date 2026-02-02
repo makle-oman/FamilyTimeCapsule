@@ -12,7 +12,7 @@
 
       <!-- 头部标题 -->
       <view class="modal-header">
-        <text class="modal-title">New Memory</text>
+        <text class="modal-title">记录新瞬间</text>
         <view class="close-btn" @tap="handleClose">
           <text class="close-icon">×</text>
         </view>
@@ -28,7 +28,7 @@
           <view class="type-icon-wrapper" :class="{ active: recordType === 'text' }">
             <text class="type-icon-text">T</text>
           </view>
-          <text class="type-label">Text</text>
+          <text class="type-label">文字</text>
         </view>
 
         <view
@@ -39,11 +39,11 @@
           <view class="type-icon-wrapper" :class="{ active: recordType === 'photo' }">
             <image
               class="type-icon-img"
-              :src="recordType === 'photo' ? '/static/icons/record/photo-active.png' : '/static/icons/record/photo.png'"
+              :src="recordType === 'photo' ? '/static/icons/record/photo-active.svg' : '/static/icons/record/photo.svg'"
               mode="aspectFit"
             />
           </view>
-          <text class="type-label">Photo</text>
+          <text class="type-label">照片</text>
         </view>
 
         <view
@@ -54,11 +54,11 @@
           <view class="type-icon-wrapper" :class="{ active: recordType === 'voice' }">
             <image
               class="type-icon-img"
-              :src="recordType === 'voice' ? '/static/icons/record/voice-active.png' : '/static/icons/record/voice.png'"
+              :src="recordType === 'voice' ? '/static/icons/record/voice-active.svg' : '/static/icons/record/voice.svg'"
               mode="aspectFit"
             />
           </view>
-          <text class="type-label">Voice</text>
+          <text class="type-label">语音</text>
         </view>
       </view>
 
@@ -79,7 +79,7 @@
           <textarea
             class="text-input"
             v-model="textContent"
-            placeholder="Write down the moment..."
+            placeholder="记录这一刻..."
             placeholder-class="input-placeholder"
             :maxlength="500"
             @focus="onInputFocus"
@@ -105,7 +105,7 @@
           <textarea
             class="text-input photo-desc"
             v-model="textContent"
-            placeholder="Write down the moment..."
+            placeholder="记录这一刻..."
             placeholder-class="input-placeholder"
             :maxlength="200"
           />
@@ -122,12 +122,12 @@
             <view class="voice-inner">
               <image
                 class="voice-icon-img"
-                src="/static/icons/record/mic.png"
+                src="/static/icons/record/mic.svg"
                 mode="aspectFit"
               />
             </view>
           </view>
-          <text class="voice-hint">{{ isRecording ? recordingTime + '"' : 'Hold to record' }}</text>
+          <text class="voice-hint">{{ isRecording ? recordingTime + '"' : '按住录音' }}</text>
 
           <!-- 录音结果 -->
           <view v-if="voiceRecorded" class="voice-result">
@@ -135,7 +135,7 @@
               <text>{{ isPlaying ? '⏸' : '▶' }}</text>
             </view>
             <text class="voice-duration">{{ recordedDuration }}"</text>
-            <view class="voice-delete" @tap="deleteVoice">Re-record</view>
+            <view class="voice-delete" @tap="deleteVoice">重新录制</view>
           </view>
         </view>
       </view>

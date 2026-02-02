@@ -297,6 +297,153 @@
       :family-info="{ name: familyInfo.name, inviteCode: inviteCode }"
       @close="closeInvitePoster"
     />
+
+    <!-- 关于我们弹窗 -->
+    <view v-if="showAboutPopup" class="settings-popup" @tap.stop="closeAboutPopup">
+      <view class="settings-content about-content" @tap.stop>
+        <view class="settings-header">
+          <text class="settings-title">关于我们</text>
+          <view class="settings-close" @tap="closeAboutPopup">×</view>
+        </view>
+
+        <scroll-view scroll-y class="settings-body">
+          <view class="about-logo">
+            <view class="logo-icon">🏠</view>
+            <text class="app-name">家的时光</text>
+            <text class="app-version">v1.0.0</text>
+          </view>
+
+          <view class="about-slogan">
+            <text class="slogan-text">「用心记录，温柔以待」</text>
+          </view>
+
+          <view class="about-desc">
+            <text class="desc-text">
+              家的时光是一款专为家庭设计的温馨记录应用，让家人之间的珍贵时刻不再被遗忘。
+            </text>
+            <text class="desc-text">
+              在这里，你可以记录生活中的点点滴滴，与家人共享美好瞬间，写下跨越时空的慢递信，回答默契问答增进彼此了解。
+            </text>
+          </view>
+
+          <view class="about-features">
+            <view class="feature-row">
+              <view class="feature-badge">📖</view>
+              <text class="feature-label">时光轴 - 记录家庭瞬间</text>
+            </view>
+            <view class="feature-row">
+              <view class="feature-badge">✉️</view>
+              <text class="feature-label">慢递信 - 给未来的信件</text>
+            </view>
+            <view class="feature-row">
+              <view class="feature-badge">❓</view>
+              <text class="feature-label">默契问答 - 增进家人了解</text>
+            </view>
+            <view class="feature-row">
+              <view class="feature-badge">🖼️</view>
+              <text class="feature-label">照片墙 - 共享美好照片</text>
+            </view>
+          </view>
+
+          <view class="about-contact">
+            <text class="contact-title">联系我们</text>
+            <view class="contact-item" @tap="copyEmail">
+              <text class="contact-label">邮箱：</text>
+              <text class="contact-value">support@familytime.app</text>
+            </view>
+          </view>
+
+          <view class="about-footer">
+            <text class="footer-text">© 2024 家的时光 All Rights Reserved</text>
+            <text class="footer-text">用爱与技术，守护每个家庭的温暖时刻</text>
+          </view>
+        </scroll-view>
+      </view>
+    </view>
+
+    <!-- 隐私设置弹窗 -->
+    <view v-if="showPrivacyPopup" class="settings-popup" @tap.stop="closePrivacyPopup">
+      <view class="settings-content privacy-content" @tap.stop>
+        <view class="settings-header">
+          <text class="settings-title">隐私设置</text>
+          <view class="settings-close" @tap="closePrivacyPopup">×</view>
+        </view>
+
+        <scroll-view scroll-y class="settings-body">
+          <view class="privacy-section">
+            <text class="privacy-section-title">数据存储</text>
+            <view class="privacy-item coming-soon-item">
+              <view class="privacy-info">
+                <text class="privacy-label">云端同步</text>
+                <text class="privacy-desc">将数据同步到云端，多设备访问</text>
+              </view>
+              <view class="coming-soon-tag">即将上线</view>
+            </view>
+            <view class="privacy-item coming-soon-item">
+              <view class="privacy-info">
+                <text class="privacy-label">本地缓存</text>
+                <text class="privacy-desc">在本地保存数据副本，加快加载速度</text>
+              </view>
+              <view class="coming-soon-tag">即将上线</view>
+            </view>
+          </view>
+
+          <view class="privacy-section">
+            <text class="privacy-section-title">分享权限</text>
+            <view class="privacy-item coming-soon-item">
+              <view class="privacy-info">
+                <text class="privacy-label">允许家人查看我的记录</text>
+                <text class="privacy-desc">家庭成员可以在时光轴看到您的动态</text>
+              </view>
+              <view class="coming-soon-tag">即将上线</view>
+            </view>
+            <view class="privacy-item coming-soon-item">
+              <view class="privacy-info">
+                <text class="privacy-label">显示在线状态</text>
+                <text class="privacy-desc">其他家人可以看到您是否在线</text>
+              </view>
+              <view class="coming-soon-tag">即将上线</view>
+            </view>
+          </view>
+
+          <view class="privacy-section">
+            <text class="privacy-section-title">通知设置</text>
+            <view class="privacy-item coming-soon-item">
+              <view class="privacy-info">
+                <text class="privacy-label">新信件提醒</text>
+                <text class="privacy-desc">有新的慢递信时通知您</text>
+              </view>
+              <view class="coming-soon-tag">即将上线</view>
+            </view>
+            <view class="privacy-item coming-soon-item">
+              <view class="privacy-info">
+                <text class="privacy-label">每日问答提醒</text>
+                <text class="privacy-desc">每日默契问答更新时提醒您</text>
+              </view>
+              <view class="coming-soon-tag">即将上线</view>
+            </view>
+          </view>
+
+          <view class="privacy-section danger-section">
+            <text class="privacy-section-title">数据管理</text>
+            <view class="privacy-action" @tap="clearCache">
+              <text class="action-label">清除本地缓存</text>
+              <text class="action-hint">释放存储空间，不会删除云端数据</text>
+            </view>
+            <view class="privacy-action coming-soon-item" @tap="exportData">
+              <text class="action-label">导出我的数据</text>
+              <text class="action-hint">将您的所有数据导出为文件</text>
+              <view class="coming-soon-tag">即将上线</view>
+            </view>
+          </view>
+
+          <view class="privacy-notice">
+            <text class="notice-icon">🔐</text>
+            <text class="notice-text">我们重视您的隐私，所有数据均加密存储</text>
+          </view>
+        </scroll-view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -314,6 +461,8 @@ const showFontSettings = ref(false)
 const showFamilyNameModal = ref(false)
 const showProfileSettings = ref(false)
 const showInvitePoster = ref(false)
+const showAboutPopup = ref(false)
+const showPrivacyPopup = ref(false)
 const soundEnabled = ref(true)
 const currentFont = ref('system')
 const fontClass = ref('font-system')
@@ -512,6 +661,10 @@ const loadCurrentUser = async () => {
 const openSettings = (type) => {
   if (type === 'font') {
     showFontSettings.value = true
+  } else if (type === 'about') {
+    showAboutPopup.value = true
+  } else if (type === 'privacy') {
+    showPrivacyPopup.value = true
   } else {
     uni.showToast({ title: `${type} 设置开发中`, icon: 'none' })
   }
@@ -560,6 +713,39 @@ const playSound = (type) => {
 
   audioContext.onEnded(() => { audioContext.destroy() })
   audioContext.onError(() => { audioContext.destroy() })
+}
+
+const closeAboutPopup = () => { showAboutPopup.value = false }
+const closePrivacyPopup = () => { showPrivacyPopup.value = false }
+
+const copyEmail = () => {
+  uni.setClipboardData({
+    data: 'support@familytime.app',
+    success: () => { uni.showToast({ title: '邮箱已复制', icon: 'success' }) }
+  })
+}
+
+const clearCache = () => {
+  uni.showModal({
+    title: '确认清除',
+    content: '确定要清除本地缓存吗？不会删除云端数据。',
+    confirmColor: '#E07A5F',
+    success: (res) => {
+      if (res.confirm) {
+        uni.clearStorageSync()
+        // 保留登录信息
+        const token = uni.getStorageSync('token')
+        const userInfo = uni.getStorageSync('userInfo')
+        if (token) uni.setStorageSync('token', token)
+        if (userInfo) uni.setStorageSync('userInfo', userInfo)
+        uni.showToast({ title: '缓存已清除', icon: 'success' })
+      }
+    }
+  })
+}
+
+const exportData = () => {
+  uni.showToast({ title: '数据导出功能开发中', icon: 'none' })
 }
 
 const openRecord = () => { showRecordModal.value = true }

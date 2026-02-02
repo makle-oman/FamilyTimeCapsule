@@ -688,15 +688,20 @@
   z-index: 1001;
   display: flex;
   align-items: flex-end;
-  padding-bottom: 10rpx;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 .settings-content {
   width: 100%;
+  max-width: 100%;
   max-height: 80vh;
   background-color: #FFFCF8;
   border-radius: 32rpx 32rpx 0 0;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
 .settings-header {
@@ -724,9 +729,13 @@
 }
 
 .settings-body {
+  flex: 1;
   padding: 32rpx;
   padding-bottom: calc(32rpx + constant(safe-area-inset-bottom));
   padding-bottom: calc(32rpx + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .font-preview {
@@ -828,4 +837,249 @@
 .notice-text {
   font-size: 24rpx;
   color: #8A9A5B;
+}
+
+// ===== 关于我们弹窗 =====
+.about-content {
+  max-height: 85vh;
+}
+
+.about-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40rpx 0 24rpx;
+}
+
+.logo-icon {
+  font-size: 80rpx;
+  margin-bottom: 16rpx;
+}
+
+.app-name {
+  font-size: 40rpx;
+  color: #5C4F42;
+  font-weight: 600;
+}
+
+.app-version {
+  font-size: 24rpx;
+  color: #C4B8A8;
+  margin-top: 8rpx;
+}
+
+.about-slogan {
+  text-align: center;
+  padding: 24rpx 0;
+}
+
+.slogan-text {
+  font-size: 30rpx;
+  color: #9E8F7D;
+  font-style: italic;
+}
+
+.about-desc {
+  padding: 24rpx;
+  background-color: #FAF7F2;
+  border-radius: 20rpx;
+  margin-bottom: 24rpx;
+}
+
+.desc-text {
+  display: block;
+  font-size: 28rpx;
+  color: #5C4F42;
+  line-height: 1.8;
+  margin-bottom: 12rpx;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.about-features {
+  margin-bottom: 24rpx;
+}
+
+.feature-row {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 24rpx;
+  background-color: #FAF7F2;
+  border-radius: 16rpx;
+  margin-bottom: 12rpx;
+}
+
+.feature-badge {
+  font-size: 36rpx;
+  margin-right: 20rpx;
+  width: 48rpx;
+  text-align: center;
+}
+
+.feature-label {
+  font-size: 28rpx;
+  color: #5C4F42;
+}
+
+.about-contact {
+  padding: 24rpx;
+  background-color: #FAF7F2;
+  border-radius: 20rpx;
+  margin-bottom: 24rpx;
+}
+
+.contact-title {
+  display: block;
+  font-size: 28rpx;
+  color: #9E8F7D;
+  margin-bottom: 16rpx;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  padding: 12rpx 0;
+}
+
+.contact-label {
+  font-size: 28rpx;
+  color: #5C4F42;
+}
+
+.contact-value {
+  font-size: 28rpx;
+  color: #E07A5F;
+}
+
+.about-footer {
+  text-align: center;
+  padding: 32rpx 0 16rpx;
+}
+
+.about-footer .footer-text {
+  display: block;
+  font-size: 22rpx;
+  color: #C4B8A8;
+  line-height: 1.8;
+}
+
+// ===== 隐私设置弹窗 =====
+.privacy-content {
+  max-height: 85vh;
+}
+
+.privacy-section {
+  margin-bottom: 32rpx;
+}
+
+.privacy-section-title {
+  display: block;
+  font-size: 26rpx;
+  color: #9E8F7D;
+  font-weight: 500;
+  margin-bottom: 16rpx;
+  padding-left: 8rpx;
+}
+
+.privacy-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx;
+  background-color: #FAF7F2;
+  border-radius: 16rpx;
+  margin-bottom: 12rpx;
+}
+
+.privacy-info {
+  flex: 1;
+  margin-right: 24rpx;
+}
+
+.privacy-label {
+  display: block;
+  font-size: 30rpx;
+  color: #5C4F42;
+}
+
+.privacy-desc {
+  display: block;
+  font-size: 24rpx;
+  color: #C4B8A8;
+  margin-top: 6rpx;
+}
+
+.privacy-switch {
+  width: 96rpx;
+  height: 52rpx;
+  background-color: #D9D3CC;
+  border-radius: 26rpx;
+  position: relative;
+  transition: background-color 0.3s ease;
+  flex-shrink: 0;
+
+  &.on {
+    background-color: #E07A5F;
+  }
+
+  .switch-thumb {
+    width: 44rpx;
+    height: 44rpx;
+    background-color: #FFFCF8;
+    border-radius: 50%;
+    position: absolute;
+    top: 4rpx;
+    left: 4rpx;
+    transition: transform 0.3s ease;
+    box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
+  }
+
+  &.on .switch-thumb {
+    transform: translateX(44rpx);
+  }
+}
+
+.privacy-action {
+  padding: 24rpx;
+  background-color: #FAF7F2;
+  border-radius: 16rpx;
+  margin-bottom: 12rpx;
+
+  &.danger .action-label {
+    color: #5C4F42;
+  }
+}
+
+.action-label {
+  display: block;
+  font-size: 30rpx;
+  color: #5C4F42;
+}
+
+.action-hint {
+  display: block;
+  font-size: 24rpx;
+  color: #C4B8A8;
+  margin-top: 6rpx;
+}
+
+// 即将上线标签
+.coming-soon-tag {
+  padding: 6rpx 16rpx;
+  background-color: rgba(158, 143, 125, 0.15);
+  border-radius: 20rpx;
+  font-size: 22rpx;
+  color: #9E8F7D;
+  flex-shrink: 0;
+}
+
+.coming-soon-item {
+  opacity: 0.7;
+
+  .privacy-label,
+  .action-label {
+    color: #9E8F7D;
+  }
 }

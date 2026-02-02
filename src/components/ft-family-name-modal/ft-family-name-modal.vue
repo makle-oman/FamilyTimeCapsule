@@ -41,7 +41,6 @@
       >
         <text class="btn-text">
           {{ mode === 'welcome' ? '开启旅程' : '保存更改' }}
-          {{ mode === 'welcome' ? ' →' : ' ✓' }}
         </text>
       </view>
     </view>
