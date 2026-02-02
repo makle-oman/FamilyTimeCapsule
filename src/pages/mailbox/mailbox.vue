@@ -263,6 +263,39 @@
         </view>
       </view>
     </view>
+
+    <!-- 年度信件列表弹窗 -->
+    <view v-if="showYearLettersPopup" class="year-letters-popup" @tap.self="closeYearLettersPopup">
+      <view class="year-letters-content" @tap.stop>
+        <view class="year-letters-header">
+          <text class="year-letters-title">{{ currentYear }}年的信</text>
+          <view class="year-letters-close" @tap="closeYearLettersPopup">×</view>
+        </view>
+
+        <scroll-view v-if="yearLetters.length" scroll-y class="year-letters-list">
+          <view
+            v-for="letter in yearLetters"
+            :key="letter.id"
+            class="year-letter-item"
+            @tap="viewYearLetter(letter)"
+          >
+            <view class="letter-envelope-mini">
+              <view class="envelope-icon">✉</view>
+            </view>
+            <view class="letter-info">
+              <text class="letter-sender-name">来自 {{ letter.senderName }}</text>
+              <text class="letter-date">{{ letter.formattedDate }}</text>
+            </view>
+            <text class="letter-arrow">›</text>
+          </view>
+        </scroll-view>
+
+        <view v-else class="year-letters-empty">
+          <text class="empty-icon">📭</text>
+          <text class="empty-text">这一年还没有已开启的信件</text>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -295,6 +328,10 @@ const selectedReceiver = ref('')
 const deliveryDate = ref('')
 const letterContent = ref('')
 const loading = ref(false)
+const showYearLettersPopup = ref(false)
+const currentYear = ref('')
+const yearLetters = ref([])
+const yearLetterCounts = ref({})
 
 const minDate = computed(() => {
   const tomorrow = new Date()
@@ -368,8 +405,19 @@ const loadPendingLetters = async () => {
 const loadLetterYears = async () => {
   try {
     const res = await getLetterYears()
-    if (res.data) {
-      yearsList.value = res.data
+    if (res.data && res.data.length > 0) {
+      // 后端返回 {year, count}[] 格式
+      if (res.data[0].year !== undefined) {
+        yearsList.value = res.data.map(item => item.year)
+        res.data.forEach(item => {
+          yearLetterCounts.value[item.year] = item.count
+        })
+      } else {
+        // 兼容旧格式（纯年份数组）
+        yearsList.value = res.data
+      }
+    } else {
+      yearsList.value = []
     }
   } catch (error) {
     console.error('加载信件年份失败:', error)
@@ -405,7 +453,7 @@ const loadTodayQuestion = async () => {
   }
 }
 
-const getYearCount = (year) => '?'
+const getYearCount = (year) => yearLetterCounts.value[year] || '?'
 
 const handleOpenLetter = async (letter) => {
   if (!letter.canOpen && letter.unlockTime > Date.now()) return
@@ -470,16 +518,40 @@ const submitAnswer = async () => {
 }
 
 const openYearLetters = async (year) => {
+  currentYear.value = year
+  showYearLettersPopup.value = true
+
   try {
     const res = await getOpenedLetters(year)
-    if (res.data && res.data.length > 0) {
-      uni.showToast({ title: `${year}年有 ${res.data.length} 封信`, icon: 'none' })
-    } else {
-      uni.showToast({ title: `${year}年暂无信件`, icon: 'none' })
+    if (res.data) {
+      yearLetters.value = res.data.map(letter => ({
+        id: letter.id,
+        senderName: letter.sender?.nickname || '未知',
+        senderAvatar: letter.sender?.avatar || '',
+        content: letter.content,
+        createTime: new Date(letter.createdAt).getTime(),
+        formattedDate: formatDate(new Date(letter.createdAt).getTime(), 'MM月DD日')
+      }))
     }
   } catch (error) {
     console.error('加载年度信件失败:', error)
+    yearLetters.value = []
   }
+}
+
+const closeYearLettersPopup = () => {
+  showYearLettersPopup.value = false
+  yearLetters.value = []
+}
+
+const viewYearLetter = (letter) => {
+  showYearLettersPopup.value = false
+  currentLetter.value = {
+    ...letter,
+    formattedDate: formatDate(letter.createTime, 'YYYY年MM月DD日')
+  }
+  showLetterPopup.value = true
+  letterOpened.value = true
 }
 
 const writeLetter = () => {

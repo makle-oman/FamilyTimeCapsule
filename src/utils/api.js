@@ -320,6 +320,7 @@ export function getOpenedLetters(year = null) {
 export function getLetterYears() {
   return request({
     url: '/letters/years',
+    method: 'POST',
   });
 }
 

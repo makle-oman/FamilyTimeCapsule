@@ -768,3 +768,144 @@
   color: #FFFCF8;
   font-weight: 500;
 }
+
+// 年度信件列表弹窗
+.year-letters-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(92, 79, 66, 0.5);
+  backdrop-filter: blur(8rpx);
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60rpx 40rpx;
+}
+
+.year-letters-content {
+  width: 100%;
+  max-height: 80vh;
+  background-color: #FFFCF8;
+  border-radius: 32rpx;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: scaleIn 0.3s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.year-letters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32rpx;
+  border-bottom: 1rpx solid #E8E4DF;
+}
+
+.year-letters-title {
+  font-size: 36rpx;
+  color: #5C4F42;
+  font-weight: 600;
+}
+
+.year-letters-close {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #FAF7F2;
+  border-radius: 50%;
+  font-size: 44rpx;
+  color: #9E8F7D;
+}
+
+.year-letters-list {
+  flex: 1;
+  padding: 16rpx 0;
+  max-height: 60vh;
+}
+
+.year-letter-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 32rpx;
+  margin: 0 24rpx 16rpx;
+  background-color: #FAF7F2;
+  border-radius: 20rpx;
+  transition: all 0.2s ease;
+
+  &:active {
+    background-color: #F0EBE5;
+    transform: scale(0.98);
+  }
+}
+
+.letter-envelope-mini {
+  width: 72rpx;
+  height: 72rpx;
+  background: linear-gradient(135deg, #E8DCC4 0%, #D4C8B0 100%);
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+  box-shadow: 0 4rpx 12rpx rgba(196, 184, 168, 0.2);
+}
+
+.envelope-icon {
+  font-size: 36rpx;
+}
+
+.letter-info {
+  flex: 1;
+}
+
+.letter-sender-name {
+  display: block;
+  font-size: 30rpx;
+  color: #5C4F42;
+  font-weight: 500;
+}
+
+.letter-date {
+  display: block;
+  font-size: 24rpx;
+  color: #9E8F7D;
+  margin-top: 4rpx;
+}
+
+.letter-arrow {
+  font-size: 40rpx;
+  color: #C4B8A8;
+}
+
+.year-letters-empty {
+  padding: 80rpx 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+  margin-bottom: 20rpx;
+}
+
+.year-letters-empty .empty-text {
+  font-size: 28rpx;
+  color: #9E8F7D;
+}
