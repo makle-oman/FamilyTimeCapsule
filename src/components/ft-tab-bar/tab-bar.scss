@@ -85,24 +85,6 @@
   z-index: 1;
 }
 
-.icon-img {
-  width: 100%;
-  height: 100%;
-  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
-}
-
-// 非活跃图标：灰化处理
-.tab-item:not(.active) .icon-img {
-  opacity: 0.5;
-  filter: grayscale(80%);
-}
-
-// 活跃图标：保持原色
-.tab-item.active .icon-img {
-  opacity: 1;
-  filter: none;
-}
-
 .tab-text {
   font-size: 20rpx;
   color: var(--color-text-light);

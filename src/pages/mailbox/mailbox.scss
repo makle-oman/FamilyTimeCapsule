@@ -102,7 +102,7 @@
 .qa-card {
   padding: 24rpx;
   background-color: var(--color-secondary-light);
-  border: 2rpx solid rgba(138, 154, 91, 0.3);
+  border: 2rpx solid var(--color-secondary-light);
   border-radius: 20rpx;
 }
 
@@ -384,7 +384,7 @@
   transform: translateX(-50%);
   width: 80rpx;
   height: 80rpx;
-  background: linear-gradient(135deg, #E07A5F 0%, #C4534A 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, #C4534A 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;

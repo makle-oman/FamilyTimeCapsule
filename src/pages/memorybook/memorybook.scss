@@ -629,7 +629,7 @@
   padding: 28rpx 32rpx;
 
   &.active {
-    background: rgba(224, 122, 95, 0.1);
+    background: var(--color-primary-light);
 
     .chapter-name {
       color: var(--color-primary);

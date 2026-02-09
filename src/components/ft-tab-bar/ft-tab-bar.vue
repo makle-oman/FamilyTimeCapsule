@@ -12,13 +12,7 @@
         @tap="switchTab('timeline')"
       >
         <view class="tab-icon-wrapper" :class="{ 'ink-spread': currentTab === 'timeline' }">
-          <view class="tab-icon">
-            <image
-              class="icon-img"
-              :src="currentTab === 'timeline' ? '/static/icons/tabbar/timeline-active.png' : '/static/icons/tabbar/timeline.png'"
-              mode="aspectFit"
-            />
-          </view>
+          <image class="tab-icon" :src="currentTab === 'timeline' ? '/static/icons/tabbar/timeline-active.png' : '/static/icons/tabbar/timeline.png'" mode="aspectFit" />
         </view>
         <text class="tab-text" :class="{ 'text-active': currentTab === 'timeline' }">时光轴</text>
       </view>
@@ -30,13 +24,7 @@
         @tap="switchTab('gallery')"
       >
         <view class="tab-icon-wrapper" :class="{ 'ink-spread': currentTab === 'gallery' }">
-          <view class="tab-icon">
-            <image
-              class="icon-img"
-              :src="currentTab === 'gallery' ? '/static/icons/tabbar/gallery-active.png' : '/static/icons/tabbar/gallery.png'"
-              mode="aspectFit"
-            />
-          </view>
+          <image class="tab-icon" :src="currentTab === 'gallery' ? '/static/icons/tabbar/gallery-active.png' : '/static/icons/tabbar/gallery.png'" mode="aspectFit" />
         </view>
         <text class="tab-text" :class="{ 'text-active': currentTab === 'gallery' }">相册馆</text>
       </view>
@@ -51,13 +39,7 @@
         @tap="switchTab('mailbox')"
       >
         <view class="tab-icon-wrapper" :class="{ 'ink-spread': currentTab === 'mailbox' }">
-          <view class="tab-icon">
-            <image
-              class="icon-img"
-              :src="currentTab === 'mailbox' ? '/static/icons/tabbar/mailbox-active.png' : '/static/icons/tabbar/mailbox.png'"
-              mode="aspectFit"
-            />
-          </view>
+          <image class="tab-icon" :src="currentTab === 'mailbox' ? '/static/icons/tabbar/mailbox-active.png' : '/static/icons/tabbar/mailbox.png'" mode="aspectFit" />
         </view>
         <text class="tab-text" :class="{ 'text-active': currentTab === 'mailbox' }">慢递</text>
       </view>
@@ -69,13 +51,7 @@
         @tap="switchTab('profile')"
       >
         <view class="tab-icon-wrapper" :class="{ 'ink-spread': currentTab === 'profile' }">
-          <view class="tab-icon">
-            <image
-              class="icon-img"
-              :src="currentTab === 'profile' ? '/static/icons/tabbar/profile-active.png' : '/static/icons/tabbar/profile.png'"
-              mode="aspectFit"
-            />
-          </view>
+          <image class="tab-icon" :src="currentTab === 'profile' ? '/static/icons/tabbar/profile-active.png' : '/static/icons/tabbar/profile.png'" mode="aspectFit" />
         </view>
         <text class="tab-text" :class="{ 'text-active': currentTab === 'profile' }">我们</text>
       </view>
@@ -84,11 +60,7 @@
     <!-- 中间悬浮记录按钮 -->
     <view class="center-btn-wrapper" @tap="openRecord">
       <view class="center-btn breathing">
-        <image
-          class="center-icon"
-          src="/static/icons/tabbar/add.png"
-          mode="aspectFit"
-        />
+        <image class="center-icon" src="/static/icons/tabbar/add.png" mode="aspectFit" />
       </view>
       <text class="center-btn-text">记录</text>
     </view>
