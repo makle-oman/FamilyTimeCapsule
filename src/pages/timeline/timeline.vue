@@ -1,5 +1,5 @@
 <template>
-  <view class="page-wrapper" :class="fontClass">
+  <view class="page-wrapper" :class="fontClass" :style="themeStyle">
     <!-- 状态栏占位 -->
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
@@ -151,10 +151,13 @@
 import { ref, computed } from 'vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import { formatDate } from '@/utils/index.js'
+import { useTheme } from '@/composables/useTheme.js'
 import {
   getMyFamily, createFamily, getMemories, getYearAgoMemories,
   createMemory, addResonance, updateFamily
 } from '@/utils/api.js'
+
+const { themeStyle } = useTheme()
 
 const statusBarHeight = ref(20)
 const scrollTop = ref(0)

@@ -174,7 +174,7 @@
           <text class="feature-arrow">›</text>
         </view>
 
-        <view class="feature-item" @tap="openSettings('theme')" v-if="false">
+        <view class="feature-item" @tap="openSettings('theme')">
           <view class="feature-icon theme-icon"><text>🎨</text></view>
           <view class="feature-content">
             <text class="feature-title">主题设置</text>

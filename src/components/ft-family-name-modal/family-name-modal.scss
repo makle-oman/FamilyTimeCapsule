@@ -17,7 +17,7 @@
   position: relative;
   width: 100%;
   max-width: 600rpx;
-  background-color: #FFFCF8;
+  background-color: var(--color-background);
   border-radius: 32rpx;
   padding: 60rpx 48rpx 48rpx;
   box-shadow: 0 24rpx 64rpx rgba(92, 79, 66, 0.2);
@@ -38,7 +38,7 @@
   left: 0;
   right: 0;
   height: 8rpx;
-  background: linear-gradient(90deg, #E07A5F 0%, #D4654A 50%, #C4B8A8 100%);
+  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-dark) 50%, var(--color-text-light) 100%);
   border-radius: 32rpx 32rpx 0 0;
 }
 
@@ -55,7 +55,7 @@
 
   text {
     font-size: 44rpx;
-    color: #C4B8A8;
+    color: var(--color-text-light);
     line-height: 1;
   }
 }
@@ -70,7 +70,7 @@
 .logo {
   width: 100rpx;
   height: 100rpx;
-  background: linear-gradient(135deg, #FFFCF8 0%, #F5F1ED 100%);
+  background: linear-gradient(135deg, var(--color-background) 0%, var(--color-background-secondary) 100%);
   border-radius: 32rpx;
   display: flex;
   align-items: center;
@@ -88,7 +88,7 @@
   text-align: center;
   font-size: 40rpx;
   font-weight: 600;
-  color: #5C4F42;
+  color: var(--color-text);
   font-style: italic;
   margin-bottom: 12rpx;
 }
@@ -97,7 +97,7 @@
   display: block;
   text-align: center;
   font-size: 26rpx;
-  color: #9E8F7D;
+  color: var(--color-text-secondary);
   margin-bottom: 40rpx;
 }
 
@@ -111,13 +111,13 @@
   width: 100%;
   height: 80rpx;
   font-size: 32rpx;
-  color: #5C4F42;
+  color: var(--color-text);
   text-align: center;
   background: transparent;
 }
 
 .input-placeholder {
-  color: #C4B8A8;
+  color: var(--color-text-light);
   font-size: 32rpx;
   font-style: italic;
 }
@@ -129,14 +129,14 @@
   transform: translateX(-50%);
   width: 80%;
   height: 2rpx;
-  background: linear-gradient(90deg, transparent 0%, #C4B8A8 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, var(--color-text-light) 50%, transparent 100%);
 }
 
 // 提交按钮
 .submit-btn {
   width: 100%;
   height: 96rpx;
-  background: linear-gradient(135deg, #6B5D50 0%, #5C4F42 100%);
+  background: linear-gradient(135deg, var(--color-text) 0%, var(--color-text) 100%);
   border-radius: 48rpx;
   display: flex;
   align-items: center;
@@ -149,14 +149,14 @@
   }
 
   &.disabled {
-    background: linear-gradient(135deg, #D4CFC7 0%, #C4B8A8 100%);
+    background: linear-gradient(135deg, #D4CFC7 0%, var(--color-text-light) 100%);
     box-shadow: none;
   }
 }
 
 .btn-text {
   font-size: 30rpx;
-  color: #FFFCF8;
+  color: var(--color-background);
   font-weight: 500;
   letter-spacing: 4rpx;
 }

@@ -1,5 +1,5 @@
 <template>
-  <view class="login-page" :class="fontClass">
+  <view class="login-page" :class="fontClass" :style="themeStyle">
     <!-- 状态栏占位 -->
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
@@ -192,7 +192,10 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
+import { useTheme } from '@/composables/useTheme.js'
 import { login, register } from '@/utils/api.js'
+
+const { themeStyle } = useTheme()
 
 // 状态
 const statusBarHeight = ref(20)

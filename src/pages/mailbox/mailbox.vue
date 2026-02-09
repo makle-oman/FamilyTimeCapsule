@@ -1,5 +1,5 @@
 <template>
-  <view class="page-wrapper mailbox-page" :class="fontClass">
+  <view class="page-wrapper mailbox-page" :class="fontClass" :style="themeStyle">
     <!-- 状态栏占位 -->
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
@@ -303,10 +303,13 @@
 import { ref, computed } from 'vue'
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import { formatDate } from '@/utils/index.js'
+import { useTheme } from '@/composables/useTheme.js'
 import {
   getPendingLetters, getOpenedLetters, getLetterYears, createLetter, openLetter,
   getTodayQuestion, answerQuestion, getMyFamily
 } from '@/utils/api.js'
+
+const { themeStyle } = useTheme()
 
 const statusBarHeight = ref(20)
 const showRecordModal = ref(false)

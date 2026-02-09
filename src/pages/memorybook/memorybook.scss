@@ -1,7 +1,7 @@
 // 纪念册页面样式
 .memorybook-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #F5F0E8 0%, #E8DFD3 100%);
+  background: linear-gradient(180deg, var(--color-background-secondary) 0%, var(--color-background-secondary) 100%);
   display: flex;
   flex-direction: column;
 }
@@ -51,13 +51,13 @@
 
 .back-icon {
   font-size: 48rpx;
-  color: #5C4F42;
+  color: var(--color-text);
   font-weight: 300;
 }
 
 .chapter-icon {
   font-size: 32rpx;
-  color: #5C4F42;
+  color: var(--color-text);
 }
 
 .header-title {
@@ -68,13 +68,13 @@
 
 .title-text {
   font-size: 36rpx;
-  color: #5C4F42;
+  color: var(--color-text);
   font-weight: 500;
 }
 
 .title-sub {
   font-size: 24rpx;
-  color: #9E8F7D;
+  color: var(--color-text-secondary);
   margin-top: 4rpx;
 }
 
@@ -102,7 +102,7 @@
   top: 0;
   bottom: 0;
   width: 24rpx;
-  background: linear-gradient(90deg, #C96B52 0%, #E07A5F 100%);
+  background: linear-gradient(90deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
   border-radius: 4rpx 0 0 4rpx;
   display: flex;
   align-items: center;
@@ -114,7 +114,7 @@
 .spine-text {
   writing-mode: vertical-rl;
   font-size: 20rpx;
-  color: #FFFCF8;
+  color: var(--color-background);
   letter-spacing: 4rpx;
 }
 
@@ -140,7 +140,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: #FFFCF8;
+  background: var(--color-background);
   transform-origin: left center;
   backface-visibility: hidden;
 }
@@ -193,7 +193,7 @@
 
 // 封面
 .cover-page {
-  background: linear-gradient(135deg, #E07A5F 0%, #C96B52 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -224,7 +224,7 @@
 
 .cover-title {
   font-size: 56rpx;
-  color: #FFFCF8;
+  color: var(--color-background);
   font-weight: 600;
   letter-spacing: 8rpx;
   text-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.2);
@@ -247,7 +247,7 @@
   align-items: center;
   justify-content: center;
   font-size: 36rpx;
-  color: #FFFCF8;
+  color: var(--color-background);
 }
 
 .cover-hint {
@@ -270,12 +270,12 @@
 }
 
 .page-left {
-  border-right: 1rpx solid #E8E4DF;
-  background: linear-gradient(90deg, #FAF7F2 0%, #FFFCF8 100%);
+  border-right: 1rpx solid var(--color-border);
+  background: linear-gradient(90deg, var(--color-background-secondary) 0%, var(--color-background) 100%);
 }
 
 .page-right {
-  background: linear-gradient(90deg, #FFFCF8 0%, #FAF7F2 100%);
+  background: linear-gradient(90deg, var(--color-background) 0%, var(--color-background-secondary) 100%);
 }
 
 .page-inner {
@@ -293,7 +293,7 @@
 
 .date-text {
   font-size: 26rpx;
-  color: #E07A5F;
+  color: var(--color-primary);
   font-weight: 500;
 }
 
@@ -324,7 +324,7 @@
 
 .author-name {
   font-size: 26rpx;
-  color: #5C4F42;
+  color: var(--color-text);
 }
 
 // 内容
@@ -335,7 +335,7 @@
 
 .content-text {
   font-size: 28rpx;
-  color: #5C4F42;
+  color: var(--color-text);
   line-height: 1.8;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -353,7 +353,7 @@
 
 .page-tag {
   font-size: 22rpx;
-  color: #9E8F7D;
+  color: var(--color-text-secondary);
 }
 
 // 页码
@@ -361,7 +361,7 @@
   position: absolute;
   bottom: 24rpx;
   font-size: 22rpx;
-  color: #C4B8A8;
+  color: var(--color-text-light);
 
   &.left {
     right: 32rpx;
@@ -429,18 +429,18 @@
 .decoration-line {
   width: 80rpx;
   height: 2rpx;
-  background: #9E8F7D;
+  background: var(--color-text-secondary);
   margin: 16rpx 0;
 }
 
 .decoration-text {
   font-size: 24rpx;
-  color: #9E8F7D;
+  color: var(--color-text-secondary);
 }
 
 // 尾页
 .end-page {
-  background: linear-gradient(135deg, #8A9A5B 0%, #6B8A4B 100%);
+  background: linear-gradient(135deg, var(--color-secondary) 0%, #6B8A4B 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -455,7 +455,7 @@
 
 .end-title {
   font-size: 48rpx;
-  color: #FFFCF8;
+  color: var(--color-background);
   font-weight: 500;
   margin-bottom: 24rpx;
 }
@@ -481,7 +481,7 @@
 
 .stat-value {
   font-size: 48rpx;
-  color: #FFFCF8;
+  color: var(--color-background);
   font-weight: 600;
 }
 
@@ -543,7 +543,7 @@
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #E07A5F 0%, #C96B52 100%);
+  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
   border-radius: 4rpx;
   transition: width 0.3s ease;
 }
@@ -557,19 +557,19 @@
 
 .page-current {
   font-size: 32rpx;
-  color: #5C4F42;
+  color: var(--color-text);
   font-weight: 500;
 }
 
 .page-divider {
   font-size: 24rpx;
-  color: #C4B8A8;
+  color: var(--color-text-light);
   margin: 0 8rpx;
 }
 
 .page-total {
   font-size: 24rpx;
-  color: #9E8F7D;
+  color: var(--color-text-secondary);
 }
 
 // 章节弹窗
@@ -589,7 +589,7 @@
 .chapter-content {
   width: 100%;
   max-height: 70vh;
-  background: #FFFCF8;
+  background: var(--color-background);
   border-radius: 32rpx 32rpx 0 0;
   overflow: hidden;
 }
@@ -599,12 +599,12 @@
   align-items: center;
   justify-content: space-between;
   padding: 32rpx;
-  border-bottom: 1rpx solid #E8E4DF;
+  border-bottom: 1rpx solid var(--color-border);
 }
 
 .chapter-title {
   font-size: 36rpx;
-  color: #5C4F42;
+  color: var(--color-text);
   font-weight: 500;
 }
 
@@ -615,7 +615,7 @@
   align-items: center;
   justify-content: center;
   font-size: 40rpx;
-  color: #9E8F7D;
+  color: var(--color-text-secondary);
 }
 
 .chapter-list {
@@ -632,7 +632,7 @@
     background: rgba(224, 122, 95, 0.1);
 
     .chapter-name {
-      color: #E07A5F;
+      color: var(--color-primary);
     }
   }
 }
@@ -640,18 +640,18 @@
 .chapter-name {
   flex: 1;
   font-size: 30rpx;
-  color: #5C4F42;
+  color: var(--color-text);
 }
 
 .chapter-count {
   font-size: 24rpx;
-  color: #9E8F7D;
+  color: var(--color-text-secondary);
   margin-right: 24rpx;
 }
 
 .chapter-page {
   font-size: 24rpx;
-  color: #C4B8A8;
+  color: var(--color-text-light);
 }
 
 // 加载中
@@ -680,7 +680,7 @@
   position: absolute;
   width: 100%;
   height: 100%;
-  background: #FFFCF8;
+  background: var(--color-background);
   border-radius: 4rpx;
   box-shadow: 0 4rpx 12rpx rgba(92, 79, 66, 0.1);
   transform-origin: left center;
@@ -706,5 +706,5 @@
 .loading-text {
   margin-top: 40rpx;
   font-size: 28rpx;
-  color: #9E8F7D;
+  color: var(--color-text-secondary);
 }

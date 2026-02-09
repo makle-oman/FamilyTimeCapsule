@@ -1,5 +1,5 @@
 <template>
-  <view class="memorybook-page" :class="fontClass">
+  <view class="memorybook-page" :class="fontClass" :style="themeStyle">
     <!-- 状态栏占位 -->
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
 
@@ -290,6 +290,9 @@ import { ref, computed, onMounted } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { getMemories, getMyFamily } from '@/utils/api.js'
 import { formatDate, getAvatarInfo } from '@/utils/index.js'
+import { useTheme } from '@/composables/useTheme.js'
+
+const { themeStyle } = useTheme()
 
 const statusBarHeight = ref(20)
 const menuButtonInfo = ref({ top: 0, height: 32, right: 10 })

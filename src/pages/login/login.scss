@@ -1,6 +1,6 @@
 .login-page {
   min-height: 100vh;
-  background: radial-gradient(ellipse at top, #FAF7F2 0%, #EDE6DC 100%);
+  background: radial-gradient(ellipse at top, var(--color-background-secondary) 0%, var(--color-background-secondary) 100%);
   position: relative;
   overflow: hidden;
 }
@@ -29,7 +29,7 @@
   &.circle-1 {
     width: 500rpx;
     height: 500rpx;
-    background: #C4B8A8;
+    background: var(--color-text-light);
     top: -150rpx;
     right: -150rpx;
   }
@@ -37,7 +37,7 @@
   &.circle-2 {
     width: 350rpx;
     height: 350rpx;
-    background: #8A9A5B;
+    background: var(--color-secondary);
     bottom: 150rpx;
     left: -120rpx;
   }
@@ -45,7 +45,7 @@
   &.circle-3 {
     width: 250rpx;
     height: 250rpx;
-    background: #C4B8A8;
+    background: var(--color-text-light);
     bottom: -60rpx;
     right: 60rpx;
   }
@@ -74,7 +74,7 @@
 .logo {
   width: 120rpx;
   height: 120rpx;
-  background: linear-gradient(135deg, #FFFCF8 0%, #F5F1ED 100%);
+  background: linear-gradient(135deg, var(--color-background) 0%, var(--color-background-secondary) 100%);
   border-radius: 36rpx;
   display: flex;
   align-items: center;
@@ -102,20 +102,20 @@
 .app-name {
   font-size: 44rpx;
   font-weight: 600;
-  color: #5C4F42;
+  color: var(--color-text);
   letter-spacing: 8rpx;
   margin-bottom: 8rpx;
 }
 
 .app-slogan {
   font-size: 24rpx;
-  color: #9E8F7D;
+  color: var(--color-text-secondary);
   letter-spacing: 2rpx;
 }
 
 // 表单卡片
 .form-card {
-  background-color: #FFFCF8;
+  background-color: var(--color-background);
   border-radius: 28rpx;
   padding: 36rpx 40rpx 44rpx;
   box-shadow: 0 12rpx 40rpx rgba(196, 184, 168, 0.15);
@@ -124,7 +124,7 @@
 // 切换标签 - 胶囊样式
 .tab-switcher {
   display: flex;
-  background-color: #F5F1ED;
+  background-color: var(--color-background-secondary);
   border-radius: 40rpx;
   padding: 6rpx;
   margin-bottom: 44rpx;
@@ -139,16 +139,16 @@
 
   text {
     font-size: 28rpx;
-    color: #9E8F7D;
+    color: var(--color-text-secondary);
     transition: all 0.3s ease;
   }
 
   &.active {
-    background-color: #FFFCF8;
+    background-color: var(--color-background);
     box-shadow: 0 4rpx 16rpx rgba(196, 184, 168, 0.2);
 
     text {
-      color: #5C4F42;
+      color: var(--color-text);
       font-weight: 500;
     }
   }
@@ -173,13 +173,13 @@
 .input-group {
   display: flex;
   align-items: center;
-  border-bottom: 1rpx solid #E8E4DF;
+  border-bottom: 1rpx solid var(--color-border);
   padding: 24rpx 0;
   margin-bottom: 8rpx;
   transition: border-color 0.3s ease;
 
   &:focus-within {
-    border-bottom-color: #C4B8A8;
+    border-bottom-color: var(--color-text-light);
   }
 }
 
@@ -190,34 +190,34 @@
 
 .input-icon {
   font-size: 32rpx;
-  color: #C4B8A8;
+  color: var(--color-text-light);
 }
 
 .input-field {
   flex: 1;
   height: 60rpx;
   font-size: 30rpx;
-  color: #5C4F42;
+  color: var(--color-text);
   padding: 0;
   background: transparent;
 }
 
 .input-placeholder {
-  color: #C4B8A8;
+  color: var(--color-text-light);
   font-size: 30rpx;
 }
 
 .toggle-pwd {
   font-size: 28rpx;
   padding: 8rpx;
-  color: #C4B8A8;
+  color: var(--color-text-light);
 }
 
 // 提交按钮
 .submit-btn {
   width: 100%;
   height: 96rpx;
-  background: linear-gradient(135deg, #6B5D50 0%, #5C4F42 100%);
+  background: linear-gradient(135deg, var(--color-text) 0%, var(--color-text) 100%);
   border-radius: 48rpx;
   display: flex;
   align-items: center;
@@ -232,14 +232,14 @@
   }
 
   &.disabled {
-    background: linear-gradient(135deg, #D4CFC7 0%, #C4B8A8 100%);
+    background: linear-gradient(135deg, var(--color-text-light) 0%, var(--color-text-light) 100%);
     box-shadow: none;
   }
 }
 
 .btn-text {
   font-size: 30rpx;
-  color: #FFFCF8;
+  color: var(--color-background);
   font-weight: 500;
   letter-spacing: 4rpx;
   font-style: italic;
@@ -261,7 +261,7 @@
 .dot {
   width: 16rpx;
   height: 16rpx;
-  background-color: #FFFCF8;
+  background-color: var(--color-background);
   border-radius: 50%;
   animation: dotPulse 1.4s ease-in-out infinite;
 
@@ -299,12 +299,12 @@
 
 .tips-text {
   font-size: 26rpx;
-  color: #9E8F7D;
+  color: var(--color-text-secondary);
 }
 
 .tips-link {
   font-size: 26rpx;
-  color: #5C4F42;
+  color: var(--color-text);
   font-weight: 500;
   margin-left: 8rpx;
 }
@@ -320,7 +320,7 @@
 
 .footer-text {
   font-size: 24rpx;
-  color: #C4B8A8;
+  color: var(--color-text-light);
   letter-spacing: 4rpx;
   font-style: italic;
 }

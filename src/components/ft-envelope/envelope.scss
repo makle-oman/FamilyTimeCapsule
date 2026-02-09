@@ -54,7 +54,7 @@
 
 .seal-text {
   font-size: 28rpx;
-  color: #FFFCF8;
+  color: var(--color-background);
   font-weight: bold;
 }
 
@@ -106,13 +106,13 @@
 .preview-date {
   display: block;
   font-size: 26rpx;
-  color: #5C4F42;
+  color: var(--color-text);
   margin-bottom: 8rpx;
 }
 
 .preview-hint {
   font-size: 24rpx;
-  color: #9E8F7D;
+  color: var(--color-text-secondary);
 }
 
 // 焦痕效果
@@ -246,5 +246,5 @@
 
 .sender-name {
   font-size: 24rpx;
-  color: #9E8F7D;
+  color: var(--color-text-secondary);
 }

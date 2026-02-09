@@ -1,5 +1,5 @@
 <template>
-  <view class="tab-bar-wrapper">
+  <view class="tab-bar-wrapper" :style="themeStyle">
     <!-- 毛玻璃背景层 -->
     <view class="tab-bar-bg"></view>
 
@@ -96,6 +96,8 @@
 </template>
 
 <script setup>
+import { useTheme } from '@/composables/useTheme.js'
+
 const props = defineProps({
   currentTab: {
     type: String,
@@ -104,6 +106,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['change', 'openRecord'])
+const { themeStyle } = useTheme()
 
 const switchTab = (tab) => {
   if (tab === props.currentTab) return
